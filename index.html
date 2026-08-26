@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eef4ff">
+  <title>Glide · 个人导航</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="app-shell">
+    <aside class="sidebar glass" id="sidebar" aria-label="网站分类">
+      <div class="brand"><span class="brand-mark">G</span><span>Glide</span><button class="icon-button mobile-only" id="closeSidebar" aria-label="关闭分类">×</button></div>
+      <nav id="categoryList" class="category-list"></nav>
+      <button class="add-category" id="addCategory"><span>＋</span> 新建分类</button>
+      <div class="sidebar-footer">
+        <button class="icon-button" id="importButton" title="导入 JSON" aria-label="导入 JSON">⇩</button>
+        <button class="icon-button" id="exportButton" title="导出 JSON" aria-label="导出 JSON">⇧</button>
+        <button class="icon-button" id="themeButton" title="切换主题" aria-label="切换主题">◐</button>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-button glass mobile-only" id="openSidebar" aria-label="打开分类">☰</button>
+        <div class="search glass"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索网站或网址…" autocomplete="off"><kbd>⌘ K</kbd></div>
+        <button class="add-site primary" id="addSite">＋ <span>添加网站</span></button>
+      </header>
+      <section class="hero">
+        <p class="eyebrow">MY START PAGE</p>
+        <h1 id="pageTitle">常用</h1>
+        <p id="siteCount">0 个网站</p>
+      </section>
+      <section class="site-grid" id="siteGrid" aria-live="polite"></section>
+      <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✦</div><h2>这里还没有网站</h2><p>添加一个常用网站，或从其他分类拖进来。</p><button class="primary" id="emptyAdd">添加第一个网站</button></div>
+    </main>
+  </div>
+
+  <dialog id="siteDialog" class="modal glass">
+    <form id="siteForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">QUICK EDIT</p><h2 id="siteDialogTitle">添加网站</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
+      <input type="hidden" id="siteId">
+      <label>名称<input id="siteName" required maxlength="40" placeholder="例如：Apple"></label>
+      <label>网址<input id="siteUrl" required type="url" placeholder="https://apple.com"></label>
+      <label>图标 <small>可填 emoji、图片网址，留空则显示首字母</small><input id="siteIcon" placeholder=" 或 https://…"></label>
+      <label>分类<select id="siteCategory"></select></label>
+      <div class="modal-actions"><button class="danger ghost" type="button" id="deleteSite" hidden>删除</button><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="categoryDialog" class="modal glass small-modal">
+    <form id="categoryForm" method="dialog">
+      <div class="modal-head"><h2 id="categoryDialogTitle">新建分类</h2><button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
+      <input type="hidden" id="categoryId">
+      <label>分类名称<input id="categoryName" required maxlength="20" placeholder="例如：阅读"></label>
+      <div class="modal-actions"><button class="danger ghost" type="button" id="deleteCategory" hidden>删除</button><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <input type="file" id="importInput" accept="application/json,.json" hidden>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
