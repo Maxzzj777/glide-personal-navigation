@@ -63,7 +63,7 @@
 
   <dialog id="adminDialog" class="modal glass small-modal">
     <form id="adminForm" method="dialog">
-      <div class="modal-head"><div><p class="eyebrow">ADMIN ACCESS</p><h2>管理员登录</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
+      <div class="modal-head"><div><p class="eyebrow">ADMIN ACCESS</p><h2>管理员登录</h2></div><button class="icon-button" id="adminClose" type="button" aria-label="关闭管理员登录">×</button></div>
       <label>账号<input id="adminUser" required autocomplete="username" placeholder="请输入管理员账号"></label>
       <label>密码<input id="adminPassword" required type="password" autocomplete="current-password" placeholder="请输入管理员密码"></label>
       <p class="form-error" id="adminError" hidden>账号或密码错误</p>
