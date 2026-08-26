@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eef4ff">
   <title>Glide · 个人导航</title>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -41,7 +41,7 @@
       <div class="modal-head"><div><p class="eyebrow">QUICK EDIT</p><h2 id="siteDialogTitle">添加网站</h2></div><button class="icon-button" id="siteClose" type="button" aria-label="关闭新增收藏">×</button></div>
       <input type="hidden" id="siteId">
       <label>名称<input id="siteName" required maxlength="40" placeholder="例如：Apple"></label>
-      <label>网址<input id="siteUrl" required type="url" placeholder="https://apple.com"></label>
+      <label>网址 <small>填写后自动补充名称、图标和详情</small><input id="siteUrl" required type="url" placeholder="https://apple.com"></label>
       <label>图标 <small>可填 emoji、图片网址，留空则显示首字母</small><input id="siteIcon" placeholder=" 或 https://…"></label>
       <label>详情备注 <small>鼠标悬停卡片时显示</small><input id="siteDetail" maxlength="100" placeholder="例如：工作常用账号、使用说明等"></label>
       <label>分类<select id="siteCategory"></select></label>
@@ -81,6 +81,6 @@
   <div class="toast" id="toast" role="status"></div>
   <script src="reference-data.js?v=5"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
