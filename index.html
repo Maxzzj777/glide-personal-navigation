@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eef4ff">
   <title>Glide · 个人导航</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -30,7 +30,7 @@
         <h1 id="pageTitle">常用</h1>
         <p id="siteCount">0 个网站</p>
       </section>
-      <section class="site-grid" id="siteGrid" aria-live="polite"></section>
+      <div class="site-sections" id="siteGrid" aria-live="polite"></div>
       <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✦</div><h2>这里还没有网站</h2><p>添加一个常用网站，或从其他分类拖进来。</p><button class="primary" id="emptyAdd">添加第一个网站</button></div>
       <nav class="bottom-nav glass" aria-label="底部导航"><a href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span>▧</span><b>背景</b></button><button id="adminToggle" aria-label="管理员开关"><span>◇</span><b id="adminLabel">管理员</b></button></nav>
     </main>
@@ -78,7 +78,7 @@
   </dialog>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="reference-data.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="reference-data.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
