@@ -14,6 +14,10 @@
       <div class="brand"><span class="brand-mark">G</span><span>Glide</span><button class="icon-button mobile-only" id="closeSidebar" aria-label="关闭分类">×</button></div>
       <nav id="categoryList" class="category-list"></nav>
       <button class="add-category" id="addCategory"><span>＋</span> 新建分类</button>
+      <div class="size-control">
+        <div><label for="iconSize">图标大小</label><output id="iconSizeValue">36</output></div>
+        <input id="iconSize" type="range" min="28" max="64" step="2" value="36" aria-label="调节网站图标大小">
+      </div>
       <div class="sidebar-footer">
         <button class="icon-button" id="importButton" title="导入 JSON" aria-label="导入 JSON">⇩</button>
         <button class="icon-button" id="exportButton" title="导出 JSON" aria-label="导出 JSON">⇧</button>
