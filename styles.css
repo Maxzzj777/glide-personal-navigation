@@ -51,8 +51,14 @@
 body:not(.admin-mode) .bottom-nav{display:none}
 @media(max-width:760px){.nav-btn{padding:9px}.nav-btn b{display:none}}
 
-/* Admin avatar button (pure accent color, right of theme toggle) */
-.admin-avatar{position:fixed;top:18px;right:18px;z-index:50;width:42px;height:42px;border-radius:50%;background:#597cff;color:#fff;border:0;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(89,124,255,.4);padding:0;transition:transform .18s,box-shadow .18s}
+/* Top-right fixed group: AI entry + admin avatar */
+.top-right{position:fixed;top:18px;right:18px;z-index:50;display:flex;align-items:center;gap:10px}
+.ai-entry{width:42px;height:42px;border:0;border-radius:12px;background:rgba(89,124,255,.18);border:1px solid rgba(89,124,255,.35);color:#9db4ff;font-size:19px;line-height:1;cursor:pointer;display:none;place-items:center;transition:background .18s}
+.ai-entry:hover{background:rgba(89,124,255,.32)}
+body.admin-mode .ai-entry{display:grid}
+
+/* Admin avatar button (pure accent color) */
+.admin-avatar{position:relative;width:42px;height:42px;border-radius:50%;background:#597cff;color:#fff;border:0;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(89,124,255,.4);padding:0;transition:transform .18s,box-shadow .18s}
 .admin-avatar:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(89,124,255,.55)}
 .admin-avatar svg{width:22px;height:22px;display:block}
 .admin-avatar .status-dot{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#2f3542;border:2px solid var(--bg);display:none}
@@ -78,3 +84,34 @@ body:not(.admin-mode) .bottom-nav{display:none}
 
 /* 书签图标：完全填满（iOS 风格） */
 .site-icon img{object-fit:contain!important;padding:0!important}
+
+/* ===== AI 功能 ===== */
+.ai-opt{margin-bottom:10px}
+.ai-opt label{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;cursor:pointer;margin-bottom:0}
+.ai-opt input[type=radio]{margin-top:3px;accent-color:var(--accent);width:auto;flex:0 0 auto}
+.ai-opt label>span{flex:1}
+.ai-opt b{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--text)}
+.ai-opt small{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45;font-weight:400}
+.ai-opt .free-tag{font-size:10px;color:#25d366;border:1px solid rgba(37,211,102,.4);border-radius:999px;padding:1px 7px;font-style:normal;font-weight:700}
+.ai-opt.sel label{border-color:var(--accent);background:rgba(89,124,255,.08)}
+.ai-custom{padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:rgba(120,130,150,.06);margin-top:2px}
+.ai-custom label{font-size:12px;color:var(--muted);display:block;margin-bottom:10px}
+.ai-custom label:last-child{margin-bottom:0}
+.ai-custom select,.ai-custom input{width:100%;margin-top:5px;padding:10px 12px;border-radius:9px;background:var(--panel-solid);border:1px solid var(--line);color:var(--text);font:inherit;font-size:13px}
+.ai-divider{height:1px;background:rgba(120,130,150,.16);margin:18px 0 16px}
+.ai-batch-entry{display:flex;align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(89,124,255,.3);border-radius:11px;background:rgba(89,124,255,.08);cursor:pointer;transition:background .18s}
+.ai-batch-entry:hover{background:rgba(89,124,255,.16)}
+.ai-batch-entry .ic{font-size:18px;line-height:1}
+.ai-batch-entry b{font-size:13px;font-weight:700;color:var(--text)}
+.ai-batch-entry small{display:block;font-size:11px;color:var(--muted);margin-top:2px;font-weight:400}
+.ai-batch-entry .go{margin-left:auto;font-size:18px;color:#9db4ff;line-height:1}
+.ai-gen-row{margin:-4px 0 14px}
+.ai-gen-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:0;border-radius:9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(89,124,255,.16);color:#9db4ff;border:1px solid rgba(89,124,255,.35);transition:background .18s}
+.ai-gen-btn:hover{background:rgba(89,124,255,.28)}
+.ai-gen-btn:disabled{opacity:.6;cursor:default}
+.batch-desc{font-size:13px;color:var(--text);line-height:1.7;margin:0 0 4px}
+.batch-desc b{color:#ffd76a}
+.batch-list{margin:10px 0 16px;padding:12px 14px;border-radius:11px;background:rgba(120,130,150,.08);border:1px solid var(--line)}
+.batch-list div{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:4px 0}
+.batch-list div b{color:var(--text)}
+.batch-progress{font-size:12px;color:#9db4ff;margin:0 0 12px}
