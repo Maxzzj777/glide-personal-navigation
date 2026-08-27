@@ -319,7 +319,9 @@ async function callAI(env, config, prompt) {
   if (config.provider === 'cloudflare') {
     if (!env.AI) throw new Error('Cloudflare Workers AI 尚未绑定：请在 Cloudflare 控制台为 Worker 绑定 AI 服务，或在 AI 设置中改用自定义 API');
     const result = await env.AI.run('@cf/zai-org/glm-4.7-flash', { messages, max_tokens: 80 });
-    return extractAIResult(result);
+    const text = extractAIResult(result);
+    if (!text) throw new Error('AI 返回格式异常，请稍后重试');
+    return text;
   }
 
   const preset = OPENAI_PROVIDERS[config.provider];
@@ -346,8 +348,37 @@ async function callAI(env, config, prompt) {
 }
 
 function extractAIResult(result) {
-  if (typeof result === 'string') return result;
-  if (Array.isArray(result)) return result.map((x) => (typeof x === 'string' ? x : x?.response)).filter(Boolean).join('').trim();
-  if (result?.response) return result.response;
-  return String(result ?? '');
+  const found = extractText(result);
+  return typeof found === 'string' ? found : '';
+}
+
+function extractText(node, depth = 0) {
+  if (depth > 8) return null;
+  if (typeof node === 'string') {
+    const t = node.trim();
+    return (t && !/^\[object\b/i.test(t)) ? t : null;
+  }
+  if (node == null) return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = extractText(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (typeof node === 'object') {
+    const preferred = ['response', 'content', 'text', 'message', 'output', 'choices', 'result', 'completion', 'generated_text'];
+    for (const key of preferred) {
+      if (key in node) {
+        const found = extractText(node[key], depth + 1);
+        if (found) return found;
+      }
+    }
+    for (const key of Object.keys(node)) {
+      if (preferred.includes(key)) continue;
+      const found = extractText(node[key], depth + 1);
+      if (found) return found;
+    }
+  }
+  return null;
 }
