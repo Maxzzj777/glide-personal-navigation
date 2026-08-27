@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "glide-navigation-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-27",
+  "kv_namespaces": [
+    {
+      "binding": "GLIDE_KV",
+      "id": "33c4efb673ec4220ae3f490d322bd951"
+    }
+  ]
+}
