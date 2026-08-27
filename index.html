@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eef4ff">
   <title>Glide · 个人导航</title>
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -62,7 +62,7 @@
     <form id="adminForm" method="dialog">
       <div class="modal-head"><div><p class="eyebrow">ADMIN ACCESS</p><h2 id="adminDialogTitle">管理员登录</h2></div><button class="icon-button" id="adminClose" type="button" aria-label="关闭管理员登录">×</button></div>
       <label>账号<input id="adminUser" required autocomplete="username" value="admin" readonly></label>
-      <label>密码<input id="adminPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"></label>
+      <label>密码<span class="password-field"><input id="adminPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"><button class="password-toggle" type="button" data-password-target="adminPassword" aria-label="显示密码" aria-pressed="false">👁</button></span></label>
       <p class="form-error" id="adminError" hidden>账号或密码错误</p>
       <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" id="adminSubmitLabel" type="submit">登录</button></div>
     </form>
@@ -71,9 +71,9 @@
   <dialog id="passwordDialog" class="modal glass small-modal">
     <form id="passwordForm" method="dialog">
       <div class="modal-head"><div><p class="eyebrow">SECURITY</p><h2>修改管理员密码</h2></div><button class="icon-button" id="passwordClose" type="button" aria-label="关闭修改密码">×</button></div>
-      <label>当前密码<input id="currentPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"></label>
-      <label>新密码<input id="newPassword" type="password" autocomplete="new-password" placeholder="留空可清除密码"></label>
-      <label>确认新密码<input id="newPasswordConfirm" type="password" autocomplete="new-password"></label>
+      <label>当前密码<span class="password-field"><input id="currentPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"><button class="password-toggle" type="button" data-password-target="currentPassword" aria-label="显示当前密码" aria-pressed="false">👁</button></span></label>
+      <label>新密码<span class="password-field"><input id="newPassword" type="password" autocomplete="new-password" placeholder="留空可清除密码"><button class="password-toggle" type="button" data-password-target="newPassword" aria-label="显示新密码" aria-pressed="false">👁</button></span></label>
+      <label>确认新密码<span class="password-field"><input id="newPasswordConfirm" type="password" autocomplete="new-password"><button class="password-toggle" type="button" data-password-target="newPasswordConfirm" aria-label="显示确认密码" aria-pressed="false">👁</button></span></label>
       <p class="form-error" id="passwordError" hidden></p>
       <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">保存新密码</button></div>
     </form>
@@ -92,6 +92,6 @@
   <div class="toast" id="toast" role="status"></div>
   <script src="reference-data.js?v=5"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>
