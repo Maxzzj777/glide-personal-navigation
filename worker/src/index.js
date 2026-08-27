@@ -46,7 +46,7 @@ export default {
         if (newPassword) {
           const salt = randomToken(16);
           const hash = await hashPassword(newPassword, salt);
-          await env.GLIDE_KV.put(CREDENTIAL_KEY, JSON.stringify({ salt, hash }));
+          await env.GLIDE_KV.put(CREDENTIAL_KEY, JSON.stringify({ version: 2, salt, hash }));
         } else {
           await env.GLIDE_KV.delete(CREDENTIAL_KEY);
         }
@@ -55,6 +55,7 @@ export default {
 
       return json({ error: 'Not found' }, 404, cors);
     } catch (error) {
+      console.error('Worker request failed', error);
       return json({ error: '服务器处理失败' }, 500, cors);
     }
   }
@@ -88,10 +89,21 @@ async function verifyPassword(env, password) {
   const raw = await env.GLIDE_KV.get(CREDENTIAL_KEY);
   if (!raw) return password === '';
   const credential = JSON.parse(raw);
-  return timingSafeEqual(await hashPassword(password, credential.salt), credential.hash);
+  const candidate = credential.version === 2
+    ? await hashPassword(password, credential.salt)
+    : await legacyHashPassword(password, credential.salt);
+  return timingSafeEqual(candidate, credential.hash);
 }
 
 async function hashPassword(password, salt) {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${salt}:${password}`)
+  );
+  return bytesToBase64(new Uint8Array(digest));
+}
+
+async function legacyHashPassword(password, salt) {
   const material = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']
   );
