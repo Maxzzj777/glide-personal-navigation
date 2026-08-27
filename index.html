@@ -16,6 +16,8 @@
         <div class="search glass"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索网站或网址…" autocomplete="off"><kbd>⌘ K</kbd></div>
         <div class="header-actions">
           <button class="add-site primary admin-only" id="addSite">＋ <span>添加网站</span></button>
+          <a class="nav-btn" href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" title="GitHub 仓库" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a>
+          <button class="nav-btn" id="adminToggle" title="管理员" aria-label="管理员开关"><span>◇</span><b id="adminLabel">管理员</b></button>
           <button class="icon-button glass" id="themeButton" title="切换主题" aria-label="切换主题">◐</button>
         </div>
       </div>
@@ -32,7 +34,7 @@
       </section>
       <div class="site-sections" id="siteGrid" aria-live="polite"></div>
       <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✦</div><h2>这里还没有网站</h2><p>添加一个常用网站，或从其他分类拖进来。</p><button class="primary" id="emptyAdd">添加第一个网站</button></div>
-      <nav class="bottom-nav glass" aria-label="底部导航"><a href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span>▧</span><b>背景</b></button><button class="admin-only" id="changePasswordButton" aria-label="修改管理员密码"><span>⌁</span><b>密码</b></button><button id="adminToggle" aria-label="管理员开关"><span>◇</span><b id="adminLabel">管理员</b></button></nav>
+      <nav class="bottom-nav glass" aria-label="底部导航"><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span>▧</span><b>背景</b></button><button class="admin-only" id="changePasswordButton" aria-label="修改管理员密码"><span>⌁</span><b>密码</b></button></nav>
     </main>
   </div>
 
