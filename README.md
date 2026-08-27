@@ -55,7 +55,7 @@ Worker 位于 `worker/`，并通过 Cloudflare Git 集成从 GitHub 自动部署
 
 ## Fork 隔离
 
-Fork 只会复制代码，不会复制原站的 Cloudflare KV、管理员密码或登录状态。Fork 使用者需要在自己的 Cloudflare 账户创建 Worker 与 KV，并将 `app.js` 中的 `API_URL` 和 `worker/wrangler.jsonc` 中的 KV ID 替换为自己的资源；Worker 默认只允许原站域名访问。
+Fork 只会复制代码，不会复制原站的 Cloudflare KV、管理员密码或登录状态。Fork 使用者需要创建自己的 Worker 与 KV，并在 `worker/wrangler.jsonc` 中填写 KV ID 和网站的 `/api/*` 路由。
 
 仓库中的首次使用模板只有一个空的“常用推荐”分类。首页直接显示该书签分组，不再显示额外的大标题区域。原站已经保存到 KV 的分类与书签不会因模板精简而改变。
 
