@@ -64,7 +64,7 @@ export default {
           if (!name || !/^https?:\/\//i.test(siteUrl)) return json({ error: '请提供有效的名称和网址' }, 400, cors);
           const meta = await fetchSiteMeta(siteUrl);
           const text = buildRemark(name, meta);
-          if (!text) return json({ error: '无法获取该网站的标题或描述信息' }, 422, cors);
+          if (!text) return json({ error: '无法获取该网站的标题或描述信息', meta }, 422, cors);
           return json({ text }, 200, cors);
         } catch (error) {
           return json({ error: error.message || '生成备注失败' }, 500, cors);
@@ -245,27 +245,33 @@ function timingSafeEqual(a, b) {
 
 // ===== 备注生成（抓取网页标题/描述，无需 AI） =====
 async function fetchSiteMeta(siteUrl) {
+  const info = { title: '', desc: '', status: 0, htmlLen: 0, preview: '' };
   try {
     const resp = await fetch(siteUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
+      },
       redirect: 'follow',
       cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 }
     });
-    if (!resp.ok) return null;
+    info.status = resp.status;
     const html = await resp.text();
+    info.htmlLen = html.length;
+    info.preview = html.slice(0, 150).replace(/\s+/g, ' ');
     const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
     const ogTitle = (html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
     const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
       || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["']/i);
     const desc = (descMatch || ['', ''])[1].replace(/\s+/g, ' ').trim();
     const ogDesc = (html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    return {
-      title: (ogTitle || title).slice(0, 120),
-      desc: (ogDesc || desc).slice(0, 200)
-    };
-  } catch {
-    return null;
+    info.title = (ogTitle || title).slice(0, 120);
+    info.desc = (ogDesc || desc).slice(0, 200);
+  } catch (e) {
+    info.preview = 'fetch error: ' + (e?.message || e);
   }
+  return info;
 }
 
 function buildRemark(name, meta) {
