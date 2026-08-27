@@ -16,6 +16,10 @@ export default {
 
     try {
       const url = new URL(request.url);
+      if (url.pathname === '/api/favicon' && request.method === 'GET') {
+        return favicon(url.searchParams.get('domain') || '', cors);
+      }
+
       if (url.pathname === '/api/state' && request.method === 'GET') {
         const value = await env.GLIDE_KV.get(DATA_KEY);
         return json(value ? JSON.parse(value) : null, 200, cors);
@@ -60,6 +64,36 @@ export default {
     }
   }
 };
+
+async function favicon(value, cors) {
+  const domain = value.trim().toLowerCase().replace(/^www\./, '');
+  if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(domain)) {
+    return json({ error: '图标域名无效' }, 400, cors);
+  }
+
+  try {
+    const source = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+    const response = await fetch(source, {
+      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
+    });
+    if (!response.ok) throw new Error('favicon fetch failed');
+    return new Response(response.body, {
+      status: 200,
+      headers: {
+        ...cors,
+        'Content-Type': response.headers.get('Content-Type') || 'image/png',
+        'Cache-Control': 'public, max-age=604800'
+      }
+    });
+  } catch {
+    const letter = domain[0].toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#5f6066"/><text x="64" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Arial" font-size="58" font-weight="700" fill="white">${letter}</text></svg>`;
+    return new Response(svg, {
+      status: 200,
+      headers: { ...cors, 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+    });
+  }
+}
 
 function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://shuqian.kdns.fr';
