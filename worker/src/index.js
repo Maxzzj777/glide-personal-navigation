@@ -71,8 +71,27 @@ async function favicon(value, cors) {
     return json({ error: '图标域名无效' }, 400, cors);
   }
 
+  // 1. 抓网站 HTML，解析高清图标（apple-touch-icon 优先）
+  const hdUrl = await fetchHDIcon(domain);
+  if (hdUrl) {
+    try {
+      const icon = await fetch(hdUrl, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+      if (icon.ok) {
+        return new Response(icon.body, {
+          status: 200,
+          headers: {
+            ...cors,
+            'Content-Type': icon.headers.get('Content-Type') || 'image/png',
+            'Cache-Control': 'public, max-age=604800'
+          }
+        });
+      }
+    } catch { /* 继续 fallback */ }
+  }
+
+  // 2. fallback：Google s2 favicons 256px
   try {
-    const source = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+    const source = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
     const response = await fetch(source, {
       cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
     });
@@ -86,6 +105,7 @@ async function favicon(value, cors) {
       }
     });
   } catch {
+    // 3. fallback：首字母 SVG
     const letter = domain[0].toUpperCase();
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#5f6066"/><text x="64" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Arial" font-size="58" font-weight="700" fill="white">${letter}</text></svg>`;
     return new Response(svg, {
@@ -93,6 +113,49 @@ async function favicon(value, cors) {
       headers: { ...cors, 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
     });
   }
+}
+
+async function fetchHDIcon(domain) {
+  try {
+    const htmlResp = await fetch(`https://${domain}/`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' },
+      redirect: 'follow',
+      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 }
+    });
+    if (!htmlResp.ok) return null;
+    const html = await htmlResp.text();
+    return parseHDIcon(html, domain);
+  } catch {
+    return null;
+  }
+}
+
+function parseHDIcon(html, domain) {
+  const base = `https://${domain}`;
+  let bestApple = null;
+  let bestAppleSize = 0;
+  let bestIcon = null;
+  let bestIconSize = 0;
+
+  const links = html.match(/<link\b[^>]*>/gi) || [];
+  for (const link of links) {
+    const rel = (link.match(/\brel=["']([^"']*)["']/i) || ['', ''])[1].toLowerCase();
+    const href = (link.match(/\bhref=["']([^"']*)["']/i) || ['', ''])[1];
+    const sizes = (link.match(/\bsizes=["']([^"']*)["']/i) || ['', ''])[1];
+    if (!href || !rel.includes('icon')) continue;
+    let abs;
+    try { abs = new URL(href, base).href; } catch { continue; }
+    const size = parseInt(sizes, 10) || 0;
+
+    if (rel.includes('apple-touch-icon')) {
+      const s = size || 180;
+      if (s > bestAppleSize) { bestAppleSize = s; bestApple = abs; }
+    } else if (rel.includes('icon')) {
+      if (size > bestIconSize) { bestIconSize = size; bestIcon = abs; }
+    }
+  }
+
+  return bestApple || bestIcon || null;
 }
 
 function corsHeaders(origin) {
