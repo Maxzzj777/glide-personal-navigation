@@ -4,6 +4,12 @@
   "main": "src/index.js",
   "compatibility_date": "2026-08-27",
   "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "shuqian.kdns.fr/api/*",
+      "zone_name": "kdns.fr"
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "GLIDE_KV",
