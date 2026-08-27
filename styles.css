@@ -52,7 +52,7 @@ body:not(.admin-mode) .bottom-nav{display:none}
 @media(max-width:760px){.nav-btn{padding:9px}.nav-btn b{display:none}}
 
 /* Admin avatar button (pure accent color, right of theme toggle) */
-.admin-avatar{position:relative;width:40px;height:40px;border-radius:50%;background:#597cff;color:#fff;border:0;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(89,124,255,.4);padding:0;transition:transform .18s,box-shadow .18s}
+.admin-avatar{position:fixed;top:18px;right:18px;z-index:50;width:42px;height:42px;border-radius:50%;background:#597cff;color:#fff;border:0;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(89,124,255,.4);padding:0;transition:transform .18s,box-shadow .18s}
 .admin-avatar:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(89,124,255,.55)}
 .admin-avatar svg{width:22px;height:22px;display:block}
 .admin-avatar .status-dot{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#2f3542;border:2px solid var(--bg);display:none}
@@ -71,3 +71,7 @@ body:not(.admin-mode) .bottom-nav{display:none}
 
 /* 分类悬停：文字变亮加粗，无背景（方案2）；选中态恢复原站高亮 */
 .category:hover{background:transparent!important;box-shadow:none!important;font-weight:800;color:var(--text)!important}
+
+/* 底部导航「退出」按钮 */
+.bottom-nav button.logout{color:#ff7b7b}
+.bottom-nav button.logout:hover{background:rgba(225,77,98,.18);color:#ff9b9b}
