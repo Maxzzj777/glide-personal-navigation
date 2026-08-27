@@ -1,6 +1,6 @@
 # Glide 个人导航
 
-一个纯 HTML / CSS / JavaScript 的个人导航页。无需账号、后端或构建工具，数据保存在当前浏览器的 `localStorage` 中。
+一个 HTML / CSS / JavaScript 个人导航页。前台托管在 GitHub Pages，管理员通过 Cloudflare Worker 将共享数据保存到 KV。
 
 ## 功能
 
@@ -12,7 +12,7 @@
 - 桌面端采用每行 8 个、62px 满幅圆角图标布局
 - 内置参考导航站点的 10 个分类与 72 个收藏链接
 - 访客模式隐藏全部修改操作；管理员账号固定为 `admin`，默认无密码
-- 管理员可在管理模式中设置、修改或清空本浏览器的管理密码
+- 管理员可在管理模式中设置、修改或清空云端管理密码
 - 顶部横向分类栏吸顶，并随页面滚动自动高亮当前分组
 - 管理员可通过公开图片链接更换或恢复网页背景
 - 手机端使用可横向滑动的顶部分类栏；长按卡片可快速编辑
@@ -41,9 +41,15 @@ python3 -m http.server 8080
 3. Framework preset 选择 `None`，Build command 留空，Build output directory 填 `/`。
 4. 点击部署。
 
-## 数据与备份
+## 云端数据
 
-数据和管理员密码摘要只存储在访问该页面的浏览器中；清理网站数据会删除导航内容及本地管理密码。默认空密码仅控制当前浏览器的管理模式，不构成服务器端身份验证。建议定期导出 JSON 备份。
+分类、书签、背景与管理员密码摘要保存在 Cloudflare KV。管理员修改后由 Worker 写入云端，访客进入网站时读取同一份共享数据。默认管理员账号为 `admin`，初始密码为空；登录后可通过底部“密码”按钮设置、修改或清空密码。
+
+Worker 位于 `worker/`，并通过 Cloudflare Git 集成从 GitHub 自动部署。KV 绑定变量名为 `GLIDE_KV`。
+
+## Fork 隔离
+
+Fork 只会复制代码，不会复制原站的 Cloudflare KV、管理员密码或登录状态。Fork 使用者需要在自己的 Cloudflare 账户创建 Worker 与 KV，并将 `app.js` 中的 `API_URL` 和 `worker/wrangler.jsonc` 中的 KV ID 替换为自己的资源；Worker 默认只允许原站域名访问。
 
 ## 文件结构
 
@@ -51,5 +57,6 @@ python3 -m http.server 8080
 index.html   页面结构
 styles.css   视觉、主题与响应式布局
 app.js       数据、编辑、拖拽、搜索与备份逻辑
+worker/      Cloudflare Worker 接口与 KV 配置
 README.md    使用与部署说明
 ```
