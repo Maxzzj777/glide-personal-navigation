@@ -7,7 +7,7 @@
   "routes": [
     {
       "pattern": "shuqian.kdns.fr/api/*",
-      "zone_name": "kdns.fr"
+      "zone_name": "shuqian.kdns.fr"
     }
   ],
   "kv_namespaces": [
