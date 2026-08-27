@@ -76,6 +76,25 @@ export default {
         }
       }
 
+      if (url.pathname === '/api/ai/config' && request.method === 'GET') {
+        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
+        const raw = await env.GLIDE_KV.get(AI_CONFIG_KEY);
+        return json(raw ? JSON.parse(raw) : DEFAULT_AI_CONFIG, 200, cors);
+      }
+
+      if (url.pathname === '/api/ai/config' && request.method === 'PUT') {
+        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
+        const config = await request.json();
+        const clean = {
+          provider: ['workers-ai', 'openai', 'gemini'].includes(config?.provider) ? config.provider : 'workers-ai',
+          apiKey: typeof config?.apiKey === 'string' ? config.apiKey.trim() : '',
+          baseUrl: typeof config?.baseUrl === 'string' ? config.baseUrl.trim() : '',
+          model: typeof config?.model === 'string' ? config.model.trim() : ''
+        };
+        await env.GLIDE_KV.put(AI_CONFIG_KEY, JSON.stringify(clean));
+        return json({ ok: true }, 200, cors);
+      }
+
       return json({ error: 'Not found' }, 404, cors);
     } catch (error) {
       console.error('Worker request failed', error);
@@ -302,21 +321,61 @@ function buildRemark(name, meta) {
   return '';
 }
 
-function isChinese(text) {
-  return /[\u4e00-\u9fff]/.test(text || '');
+const AI_CONFIG_KEY = 'ai-config';
+const DEFAULT_AI_CONFIG = { provider: 'workers-ai', apiKey: '', baseUrl: '', model: '' };
+
+async function getAIConfig(env) {
+  const raw = await env.GLIDE_KV.get(AI_CONFIG_KEY);
+  if (!raw) return { ...DEFAULT_AI_CONFIG };
+  try { return { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) }; } catch { return { ...DEFAULT_AI_CONFIG }; }
 }
 
 async function generateRemark(env, name, url, meta) {
-  if (!env.AI) throw new Error('Workers AI 未绑定');
+  const config = await getAIConfig(env);
   const system = '你是一个为书签导航站生成简洁准确中文描述的助手。';
   let user = '请为下面的网站生成一句简洁的中文描述（不超过30字），说明它是什么、有什么用。只输出描述本身，不要前缀、不要引号、不要换行。';
   user += `\n网站名称：${name}\n网址：${url}`;
   if (meta?.title) user += `\n网页标题：${meta.title}`;
   if (meta?.desc) user += `\n网页描述：${meta.desc}`;
-  const response = await env.AI.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
-    messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-    max_tokens: 200
-  });
-  const text = typeof response === 'string' ? response : (response?.response || '');
-  return (text || '').trim();
+  const messages = [{ role: 'system', content: system }, { role: 'user', content: user }];
+  const provider = config.provider || 'workers-ai';
+
+  if (provider === 'workers-ai') {
+    if (!env.AI) throw new Error('Workers AI 未绑定');
+    const model = config.model || '@cf/mistralai/mistral-small-3.1-24b-instruct';
+    const response = await env.AI.run(model, { messages, max_tokens: 200 });
+    const text = typeof response === 'string' ? response : (response?.response || '');
+    return (text || '').trim();
+  }
+
+  if (provider === 'openai') {
+    const baseUrl = config.baseUrl, apiKey = config.apiKey, model = config.model || 'gpt-3.5-turbo';
+    if (!baseUrl) throw new Error('请填写 API 地址');
+    if (!apiKey) throw new Error('请填写 API Key');
+    const endpoint = `${baseUrl.replace(/\/+$/, '')}/v1/chat/completions`;
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: 200 })
+    });
+    if (!resp.ok) throw new Error(`AI 服务返回错误 (${resp.status})`);
+    const data = await resp.json();
+    return (data?.choices?.[0]?.message?.content || '').trim();
+  }
+
+  if (provider === 'gemini') {
+    const apiKey = config.apiKey, model = config.model || 'gemini-1.5-flash';
+    if (!apiKey) throw new Error('请填写 Gemini API Key');
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const contents = messages.filter(m => m.role !== 'system').map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] }));
+    const systemMsg = messages.find(m => m.role === 'system');
+    const payload = { contents, generationConfig: { temperature: 0.7 } };
+    if (systemMsg) payload.systemInstruction = { parts: [{ text: systemMsg.content }] };
+    const resp = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: JSON.stringify(payload) });
+    if (!resp.ok) throw new Error(`Gemini 返回错误 (${resp.status})`);
+    const data = await resp.json();
+    return (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+  }
+
+  throw new Error(`不支持的 AI 服务：${provider}`);
 }

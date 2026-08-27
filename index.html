@@ -10,6 +10,7 @@
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
   <div class="top-right">
+    <button class="ai-entry admin-only" id="aiSettingsButton" title="AI 设置" aria-label="打开 AI 设置">✨</button>
     <button class="admin-avatar" id="adminToggle" title="管理员" aria-label="管理员开关"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="#fff"/><path d="M5.4 19.2c0-3.5 3-5.8 6.6-5.8s6.6 2.3 6.6 5.8v.4H5.4v-.4z" fill="#fff"/></svg><span class="status-dot" id="adminStatusDot"></span></button>
   </div>
   <div class="app-shell">
@@ -95,9 +96,25 @@
     </form>
   </dialog>
 
+  <dialog id="aiDialog" class="modal glass">
+    <form id="aiForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">AI SETTINGS</p><h2>AI 设置</h2></div><button class="icon-button" id="aiClose" type="button" aria-label="关闭 AI 设置">×</button></div>
+      <label>AI 服务<select id="aiProvider">
+        <option value="workers-ai">Cloudflare Workers AI（免费）</option>
+        <option value="openai">OpenAI 兼容 API</option>
+        <option value="gemini">Google Gemini</option>
+      </select></label>
+      <label id="aiModelField">模型<input id="aiModel" type="text" placeholder="留空使用默认模型" autocomplete="off"></label>
+      <label id="aiKeyField" hidden>API Key<input id="aiApiKey" type="password" placeholder="填写服务商的 key" autocomplete="off"></label>
+      <label id="aiBaseUrlField" hidden>API 地址<input id="aiBaseUrl" type="text" placeholder="https://api.xxx.com/v1" autocomplete="off"></label>
+      <p class="form-error" id="aiError" hidden></p>
+      <div class="modal-actions"><span></span><button class="ghost" type="button" id="aiCancel">取消</button><button class="primary" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
   <dialog class="toast" id="toast" role="status"></dialog>
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>
