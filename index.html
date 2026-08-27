@@ -5,26 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eef4ff">
   <title>Glide · 个人导航</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="app-shell">
-    <aside class="sidebar glass" id="sidebar" aria-label="网站分类">
-      <div class="brand"><span class="brand-mark">G</span><span>Glide</span><button class="icon-button mobile-only" id="closeSidebar" aria-label="关闭分类">×</button></div>
-      <nav id="categoryList" class="category-list"></nav>
-      <button class="add-category admin-only" id="addCategory"><span>＋</span> 新建分类</button>
-      <div class="sidebar-footer">
-        <button class="icon-button" id="themeButton" title="切换主题" aria-label="切换主题">◐</button>
-      </div>
-    </aside>
-    <div class="scrim" id="scrim"></div>
-    <main class="main">
-      <header class="topbar">
-        <button class="icon-button glass mobile-only" id="openSidebar" aria-label="打开分类">☰</button>
+    <header class="site-header">
+      <div class="topbar">
+        <div class="brand"><span class="brand-mark">G</span><span>Glide</span></div>
         <div class="search glass"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索网站或网址…" autocomplete="off"><kbd>⌘ K</kbd></div>
-        <button class="add-site primary admin-only" id="addSite">＋ <span>添加网站</span></button>
-      </header>
+        <div class="header-actions">
+          <button class="add-site primary admin-only" id="addSite">＋ <span>添加网站</span></button>
+          <button class="icon-button glass" id="themeButton" title="切换主题" aria-label="切换主题">◐</button>
+        </div>
+      </div>
+      <div class="category-strip glass">
+        <nav id="categoryList" class="category-list" aria-label="网站分类"></nav>
+        <button class="add-category admin-only" id="addCategory"><span>＋</span> 新建分类</button>
+      </div>
+    </header>
+    <main class="main">
       <section class="hero">
         <p class="eyebrow">MY START PAGE</p>
         <h1 id="pageTitle">常用</h1>
@@ -32,7 +32,7 @@
       </section>
       <div class="site-sections" id="siteGrid" aria-live="polite"></div>
       <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✦</div><h2>这里还没有网站</h2><p>添加一个常用网站，或从其他分类拖进来。</p><button class="primary" id="emptyAdd">添加第一个网站</button></div>
-      <nav class="bottom-nav glass" aria-label="底部导航"><a href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span>▧</span><b>背景</b></button><button id="adminToggle" aria-label="管理员开关"><span>◇</span><b id="adminLabel">管理员</b></button></nav>
+      <nav class="bottom-nav glass" aria-label="底部导航"><a href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span>▧</span><b>背景</b></button><button class="admin-only" id="changePasswordButton" aria-label="修改管理员密码"><span>⌁</span><b>密码</b></button><button id="adminToggle" aria-label="管理员开关"><span>◇</span><b id="adminLabel">管理员</b></button></nav>
     </main>
   </div>
 
@@ -60,11 +60,22 @@
 
   <dialog id="adminDialog" class="modal glass small-modal">
     <form id="adminForm" method="dialog">
-      <div class="modal-head"><div><p class="eyebrow">ADMIN ACCESS</p><h2>管理员登录</h2></div><button class="icon-button" id="adminClose" type="button" aria-label="关闭管理员登录">×</button></div>
-      <label>账号<input id="adminUser" required autocomplete="username" placeholder="请输入管理员账号"></label>
-      <label>密码<input id="adminPassword" required type="password" autocomplete="current-password" placeholder="请输入管理员密码"></label>
+      <div class="modal-head"><div><p class="eyebrow">ADMIN ACCESS</p><h2 id="adminDialogTitle">管理员登录</h2></div><button class="icon-button" id="adminClose" type="button" aria-label="关闭管理员登录">×</button></div>
+      <label>账号<input id="adminUser" required autocomplete="username" value="admin" readonly></label>
+      <label>密码<input id="adminPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"></label>
       <p class="form-error" id="adminError" hidden>账号或密码错误</p>
-      <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">登录</button></div>
+      <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" id="adminSubmitLabel" type="submit">登录</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="passwordDialog" class="modal glass small-modal">
+    <form id="passwordForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">SECURITY</p><h2>修改管理员密码</h2></div><button class="icon-button" id="passwordClose" type="button" aria-label="关闭修改密码">×</button></div>
+      <label>当前密码<input id="currentPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"></label>
+      <label>新密码<input id="newPassword" type="password" autocomplete="new-password" placeholder="留空可清除密码"></label>
+      <label>确认新密码<input id="newPasswordConfirm" type="password" autocomplete="new-password"></label>
+      <p class="form-error" id="passwordError" hidden></p>
+      <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">保存新密码</button></div>
     </form>
   </dialog>
 
@@ -81,6 +92,6 @@
   <div class="toast" id="toast" role="status"></div>
   <script src="reference-data.js?v=5"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
