@@ -277,8 +277,10 @@ async function fetchSiteMeta(siteUrl) {
 function buildRemark(name, meta) {
   const desc = (meta?.desc || '').trim();
   const title = (meta?.title || '').trim();
-  // 优先网页描述（最能说明用途），其次网页标题
-  if (desc && desc !== name) return desc.slice(0, 100);
-  if (title && title !== name) return title.slice(0, 100);
+  const blocked = /出错啦|访问异常|安全验证|验证码|captcha|access denied|访问被拒|网络异常|页面不存在|not found|error/i;
+  const isBlocked = (t) => t && blocked.test(t);
+  // 优先网页描述（最能说明用途），其次网页标题；排除反爬/错误页
+  if (desc && desc !== name && !isBlocked(desc)) return desc.slice(0, 100);
+  if (title && title !== name && !isBlocked(title)) return title.slice(0, 100);
   return '';
 }
