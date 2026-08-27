@@ -266,20 +266,32 @@ async function fetchSiteMeta(siteUrl) {
       || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["']/i);
     const desc = (descMatch || ['', ''])[1].replace(/\s+/g, ' ').trim();
     const ogDesc = (html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    info.title = (ogTitle || title).slice(0, 120);
-    info.desc = (ogDesc || desc).slice(0, 200);
+    info.title = decodeHtmlEntities(ogTitle || title).slice(0, 120);
+    info.desc = decodeHtmlEntities(ogDesc || desc).slice(0, 200);
   } catch (e) {
     info.preview = 'fetch error: ' + (e?.message || e);
   }
   return info;
 }
 
+function decodeHtmlEntities(s) {
+  return String(s || '')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d, 10)))
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'");
+}
+
 function buildRemark(name, meta) {
   const desc = (meta?.desc || '').trim();
   const title = (meta?.title || '').trim();
   const blocked = /出错啦|访问异常|安全验证|验证码|captcha|access denied|访问被拒|网络异常|页面不存在|not found|error/i;
-  const isBlocked = (t) => t && blocked.test(t);
-  // 优先网页描述（最能说明用途），其次网页标题；排除反爬/错误页
+  const isBlocked = (t) => t && (blocked.test(t) || /^https?:\/\//i.test(t));
+  // 优先网页描述（最能说明用途），其次网页标题；排除反爬/错误页/URL
   if (desc && desc !== name && !isBlocked(desc)) return desc.slice(0, 100);
   if (title && title !== name && !isBlocked(title)) return title.slice(0, 100);
   return '';
