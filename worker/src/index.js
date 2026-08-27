@@ -63,9 +63,13 @@ export default {
           const { url: siteUrl = '', name = '' } = await request.json();
           if (!name || !/^https?:\/\//i.test(siteUrl)) return json({ error: '请提供有效的名称和网址' }, 400, cors);
           const meta = await fetchSiteMeta(siteUrl);
-          let text = buildRemark(name, meta);
-          if (!text) return json({ error: '无法获取该网站的标题或描述信息', meta }, 422, cors);
-          if (!isChinese(text)) text = await translateToChinese(text);
+          let text = '';
+          try {
+            text = await generateRemark(env, name, siteUrl, meta);
+          } catch {
+            text = buildRemark(name, meta);
+          }
+          if (!text) return json({ error: '无法生成备注', meta }, 422, cors);
           return json({ text: text.slice(0, 100) }, 200, cors);
         } catch (error) {
           return json({ error: error.message || '生成备注失败' }, 500, cors);
@@ -302,16 +306,17 @@ function isChinese(text) {
   return /[\u4e00-\u9fff]/.test(text || '');
 }
 
-async function translateToChinese(text) {
-  try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${encodeURIComponent(text)}`;
-    const resp = await fetch(url);
-    if (!resp.ok) return text;
-    const data = await resp.json();
-    const sentences = (data && data[0]) || [];
-    const translated = sentences.map((s) => (Array.isArray(s) && s[0]) || '').join('');
-    return translated || text;
-  } catch {
-    return text;
-  }
+async function generateRemark(env, name, url, meta) {
+  if (!env.AI) throw new Error('Workers AI 未绑定');
+  const system = '你是一个为书签导航站生成简洁准确中文描述的助手。';
+  let user = '请为下面的网站生成一句简洁的中文描述（不超过30字），说明它是什么、有什么用。只输出描述本身，不要前缀、不要引号、不要换行。';
+  user += `\n网站名称：${name}\n网址：${url}`;
+  if (meta?.title) user += `\n网页标题：${meta.title}`;
+  if (meta?.desc) user += `\n网页描述：${meta.desc}`;
+  const response = await env.AI.run('@cf/mistralai/mistral-small-3.1-24b-instruct', {
+    messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+    max_tokens: 200
+  });
+  const text = typeof response === 'string' ? response : (response?.response || '');
+  return (text || '').trim();
 }
