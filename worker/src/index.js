@@ -318,7 +318,7 @@ async function callAI(env, config, prompt) {
 
   if (config.provider === 'cloudflare') {
     if (!env.AI) throw new Error('Cloudflare Workers AI 尚未绑定：请在 Cloudflare 控制台为 Worker 绑定 AI 服务，或在 AI 设置中改用自定义 API');
-    const result = await env.AI.run('@cf/qwen/qwen1.5-7b-chat', { messages, max_tokens: 80 });
+    const result = await env.AI.run('@cf/zai-org/glm-4.7-flash', { messages, max_tokens: 80 });
     return extractAIResult(result);
   }
 
