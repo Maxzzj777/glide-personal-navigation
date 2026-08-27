@@ -2,9 +2,11 @@
 
 一个 HTML / CSS / JavaScript 个人导航页。前台托管在 GitHub Pages，管理员通过 Cloudflare Worker 将共享数据保存到 KV。
 
-[🍴 复制分支（Fork）](https://github.com/Maxzzj777/glide-personal-navigation/fork) · [🌤️ 小黄云 Cloudflare 部署教程](CLOUDFLARE-DEPLOY.md) · [🌐 查看演示网站](https://shuqian.kdns.fr/)
+[🍴 复制分支（Fork）](https://github.com/Maxzzj777/glide-personal-navigation/fork) · [🌤️ 小黄云 Cloudflare 部署教程](CLOUDFLARE-DEPLOY.md)
 
 > Fork 只复制程序代码，不会复制原站书签、KV 数据或管理员密码。
+
+![Glide 个人导航界面展示](preview.jpg)
 
 ## 功能
 
