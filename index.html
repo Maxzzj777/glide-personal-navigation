@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
-  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="aurora" aria-hidden="true"><i></i><i></i></div>
   <div class="app-shell">
     <header class="site-header">
       <div class="topbar">
@@ -17,13 +17,14 @@
         <div class="header-actions">
           <button class="add-site primary admin-only" id="addSite">＋ <span>添加网站</span></button>
           <a class="nav-btn" href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" title="GitHub 仓库" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a>
-          <button class="nav-btn" id="adminToggle" title="管理员" aria-label="管理员开关"><span>◇</span><b id="adminLabel">管理员</b></button>
           <button class="icon-button glass" id="themeButton" title="切换主题" aria-label="切换主题">◐</button>
+          <button class="admin-avatar" id="adminToggle" title="管理员" aria-label="管理员开关"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="#fff"/><path d="M5.4 19.2c0-3.5 3-5.8 6.6-5.8s6.6 2.3 6.6 5.8v.4H5.4v-.4z" fill="#fff"/></svg><span class="status-dot" id="adminStatusDot"></span></button>
         </div>
       </div>
       <div class="category-strip glass">
         <nav id="categoryList" class="category-list" aria-label="网站分类"></nav>
         <button class="add-category admin-only" id="addCategory"><span>＋</span> 新建分类</button>
+        <button class="expand-toggle" id="expandToggle" title="展开分组" aria-label="展开或收起分组">▾</button>
       </div>
     </header>
     <main class="main">
