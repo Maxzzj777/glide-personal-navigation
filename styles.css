@@ -76,5 +76,5 @@ body:not(.admin-mode) .bottom-nav{display:none}
 .bottom-nav button.logout{color:#ff7b7b}
 .bottom-nav button.logout:hover{background:rgba(225,77,98,.18);color:#ff9b9b}
 
-/* 书签图标：居中留白，保持正常比例（不裁切铺满） */
-.site-icon img{object-fit:contain!important;padding:4px!important}
+/* 书签图标：完全填满（iOS 风格） */
+.site-icon img{object-fit:contain!important;padding:0!important}
