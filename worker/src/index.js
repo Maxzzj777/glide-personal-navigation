@@ -63,9 +63,10 @@ export default {
           const { url: siteUrl = '', name = '' } = await request.json();
           if (!name || !/^https?:\/\//i.test(siteUrl)) return json({ error: '请提供有效的名称和网址' }, 400, cors);
           const meta = await fetchSiteMeta(siteUrl);
-          const text = buildRemark(name, meta);
+          let text = buildRemark(name, meta);
           if (!text) return json({ error: '无法获取该网站的标题或描述信息', meta }, 422, cors);
-          return json({ text }, 200, cors);
+          if (!isChinese(text)) text = await translateToChinese(text);
+          return json({ text: text.slice(0, 100) }, 200, cors);
         } catch (error) {
           return json({ error: error.message || '生成备注失败' }, 500, cors);
         }
@@ -295,4 +296,22 @@ function buildRemark(name, meta) {
   if (desc && desc !== name && !isBlocked(desc)) return desc.slice(0, 100);
   if (title && title !== name && !isBlocked(title)) return title.slice(0, 100);
   return '';
+}
+
+function isChinese(text) {
+  return /[\u4e00-\u9fff]/.test(text || '');
+}
+
+async function translateToChinese(text) {
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${encodeURIComponent(text)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return text;
+    const data = await resp.json();
+    const sentences = (data && data[0]) || [];
+    const translated = sentences.map((s) => (Array.isArray(s) && s[0]) || '').join('');
+    return translated || text;
+  } catch {
+    return text;
+  }
 }
