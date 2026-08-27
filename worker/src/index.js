@@ -320,7 +320,7 @@ async function callAI(env, config, prompt) {
     if (!env.AI) throw new Error('Cloudflare Workers AI 尚未绑定：请在 Cloudflare 控制台为 Worker 绑定 AI 服务，或在 AI 设置中改用自定义 API');
     const result = await env.AI.run('@cf/zai-org/glm-4.7-flash', { messages, max_tokens: 80 });
     const text = extractAIResult(result);
-    if (!text) throw new Error('AI 返回格式异常，请稍后重试');
+    if (!text) throw new Error('AI 返回格式异常：' + JSON.stringify(result).slice(0, 600));
     return text;
   }
 
@@ -356,7 +356,9 @@ function extractText(node, depth = 0) {
   if (depth > 8) return null;
   if (typeof node === 'string') {
     const t = node.trim();
-    return (t && !/^\[object\b/i.test(t)) ? t : null;
+    if (!t || /^\[object\b/i.test(t)) return null;
+    if (['assistant', 'user', 'system', 'tool', 'function', 'model'].includes(t.toLowerCase())) return null;
+    return t;
   }
   if (node == null) return null;
   if (Array.isArray(node)) {
@@ -367,7 +369,7 @@ function extractText(node, depth = 0) {
     return null;
   }
   if (typeof node === 'object') {
-    const preferred = ['response', 'content', 'text', 'message', 'output', 'choices', 'result', 'completion', 'generated_text'];
+    const preferred = ['content', 'response', 'text', 'output', 'result', 'completion', 'generated_text', 'reasoning_content', 'answer', 'message'];
     for (const key of preferred) {
       if (key in node) {
         const found = extractText(node[key], depth + 1);
