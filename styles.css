@@ -66,7 +66,7 @@ body:not(.admin-mode) .bottom-nav{display:none}
 .category-strip.expanded .expand-toggle{transform:rotate(180deg);background:rgba(89,124,255,.32)}
 
 /* 书签图标：方形框（小圆角）+ 悬停无背景高亮，仅保留小手 */
-.site-icon{border-radius:10px!important}
+.site-icon{border-radius:14px!important}
 .site-card:hover{background:transparent!important;box-shadow:none!important;transform:none!important}
 
 /* 分类悬停：文字变亮加粗，无背景（方案2）；选中态恢复原站高亮 */
