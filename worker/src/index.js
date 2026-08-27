@@ -57,36 +57,17 @@ export default {
         return json({ ok: true }, 200, cors);
       }
 
-      if (url.pathname === '/api/ai/config' && request.method === 'GET') {
-        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
-        const raw = await env.GLIDE_KV.get(AI_CONFIG_KEY);
-        return json(raw ? JSON.parse(raw) : DEFAULT_AI_CONFIG, 200, cors);
-      }
-
-      if (url.pathname === '/api/ai/config' && request.method === 'PUT') {
-        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
-        const config = await request.json();
-        const clean = {
-          provider: PROVIDERS.has(config?.provider) ? config.provider : 'cloudflare',
-          apiKey: typeof config?.apiKey === 'string' ? config.apiKey.trim() : '',
-          baseUrl: typeof config?.baseUrl === 'string' ? config.baseUrl.trim() : '',
-          model: typeof config?.model === 'string' ? config.model.trim() : ''
-        };
-        await env.GLIDE_KV.put(AI_CONFIG_KEY, JSON.stringify(clean));
-        return json({ ok: true }, 200, cors);
-      }
-
-      if (url.pathname === '/api/ai/describe' && request.method === 'POST') {
+      if (url.pathname === '/api/remark' && request.method === 'POST') {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
         try {
           const { url: siteUrl = '', name = '' } = await request.json();
           if (!name || !/^https?:\/\//i.test(siteUrl)) return json({ error: '请提供有效的名称和网址' }, 400, cors);
-          const config = await getAIConfig(env);
           const meta = await fetchSiteMeta(siteUrl);
-          const text = await callAI(env, config, buildDescribePrompt(name, siteUrl, meta));
-          return json({ text: cleanText(text) }, 200, cors);
+          const text = buildRemark(name, meta);
+          if (!text) return json({ error: '无法获取该网站的标题或描述信息' }, 422, cors);
+          return json({ text }, 200, cors);
         } catch (error) {
-          return json({ error: error.message || 'AI 调用失败' }, 500, cors);
+          return json({ error: error.message || '生成备注失败' }, 500, cors);
         }
       }
 
@@ -262,23 +243,7 @@ function timingSafeEqual(a, b) {
   return result === 0;
 }
 
-// ===== AI 备注生成 =====
-const AI_CONFIG_KEY = 'ai-config';
-const DEFAULT_AI_CONFIG = { provider: 'cloudflare', apiKey: '', baseUrl: '', model: '' };
-const PROVIDERS = new Set(['cloudflare', 'zhipu', 'gemini', 'groq', 'siliconflow', 'custom']);
-const OPENAI_PROVIDERS = {
-  zhipu: { endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions', model: 'glm-4-flash' },
-  gemini: { endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-2.0-flash' },
-  groq: { endpoint: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.3-70b-versatile' },
-  siliconflow: { endpoint: 'https://api.siliconflow.cn/v1/chat/completions', model: 'Qwen/Qwen2.5-7B-Instruct' }
-};
-
-async function getAIConfig(env) {
-  const raw = await env.GLIDE_KV.get(AI_CONFIG_KEY);
-  if (!raw) return { ...DEFAULT_AI_CONFIG };
-  try { return { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) }; } catch { return { ...DEFAULT_AI_CONFIG }; }
-}
-
+// ===== 备注生成（抓取网页标题/描述，无需 AI） =====
 async function fetchSiteMeta(siteUrl) {
   try {
     const resp = await fetch(siteUrl, {
@@ -289,98 +254,25 @@ async function fetchSiteMeta(siteUrl) {
     if (!resp.ok) return null;
     const html = await resp.text();
     const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
+    const ogTitle = (html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
     const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
       || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["']/i);
     const desc = (descMatch || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    return { title: title.slice(0, 120), desc: desc.slice(0, 200) };
+    const ogDesc = (html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
+    return {
+      title: (ogTitle || title).slice(0, 120),
+      desc: (ogDesc || desc).slice(0, 200)
+    };
   } catch {
     return null;
   }
 }
 
-function buildDescribePrompt(name, url, meta) {
-  const lines = [`网站名称：${name}`, `网址：${url}`];
-  if (meta?.title) lines.push(`网页标题：${meta.title}`);
-  if (meta?.desc) lines.push(`网页描述：${meta.desc}`);
-  return lines.join('\n');
-}
-
-function cleanText(text) {
-  let t = String(text || '').trim();
-  t = t.replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim();
-  t = t.replace(/\s*\n\s*/g, ' ');
-  return t.slice(0, 40);
-}
-
-async function callAI(env, config, prompt) {
-  const system = '你是书签导航站的助手。根据提供的网站信息，用一句简洁的中文（不超过20个字）说明这个网站是什么、有什么用。只输出这一句话本身，不要引号、不要解释、不要换行。';
-  const messages = [{ role: 'system', content: system }, { role: 'user', content: prompt }];
-
-  if (config.provider === 'cloudflare') {
-    if (!env.AI) throw new Error('Cloudflare Workers AI 尚未绑定：请在 Cloudflare 控制台为 Worker 绑定 AI 服务，或在 AI 设置中改用自定义 API');
-    const result = await env.AI.run('@cf/zai-org/glm-4.7-flash', { messages, max_tokens: 256 });
-    const text = extractAIResult(result);
-    if (!text) throw new Error('AI 返回格式异常：' + JSON.stringify(result).slice(0, 600));
-    return text;
-  }
-
-  const preset = OPENAI_PROVIDERS[config.provider];
-  const endpoint = config.provider === 'custom' ? config.baseUrl : preset?.endpoint;
-  const model = config.provider === 'custom' ? config.model : preset?.model;
-  const apiKey = config.apiKey;
-  if (!endpoint) throw new Error('请填写 API 地址');
-  if (!apiKey) throw new Error('请填写 API Key');
-  if (!model) throw new Error('请填写模型名称');
-
-  const resp = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, max_tokens: 80, temperature: 0.7 })
-  });
-  if (!resp.ok) {
-    const errText = await resp.text().catch(() => '');
-    throw new Error(`AI 服务返回错误 (${resp.status})${errText ? '：' + errText.slice(0, 200) : ''}`);
-  }
-  const data = await resp.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('AI 返回内容为空');
-  return text;
-}
-
-function extractAIResult(result) {
-  const found = extractText(result);
-  return typeof found === 'string' ? found : '';
-}
-
-function extractText(node, depth = 0) {
-  if (depth > 8) return null;
-  if (typeof node === 'string') {
-    const t = node.trim();
-    if (!t || /^\[object\b/i.test(t)) return null;
-    if (['assistant', 'user', 'system', 'tool', 'function', 'model'].includes(t.toLowerCase())) return null;
-    return t;
-  }
-  if (node == null) return null;
-  if (Array.isArray(node)) {
-    for (const item of node) {
-      const found = extractText(item, depth + 1);
-      if (found) return found;
-    }
-    return null;
-  }
-  if (typeof node === 'object') {
-    const preferred = ['content', 'response', 'text', 'output', 'result', 'completion', 'generated_text', 'reasoning_content', 'answer', 'message'];
-    for (const key of preferred) {
-      if (key in node) {
-        const found = extractText(node[key], depth + 1);
-        if (found) return found;
-      }
-    }
-    for (const key of Object.keys(node)) {
-      if (preferred.includes(key)) continue;
-      const found = extractText(node[key], depth + 1);
-      if (found) return found;
-    }
-  }
-  return null;
+function buildRemark(name, meta) {
+  const desc = (meta?.desc || '').trim();
+  const title = (meta?.title || '').trim();
+  // 优先网页描述（最能说明用途），其次网页标题
+  if (desc && desc !== name) return desc.slice(0, 100);
+  if (title && title !== name) return title.slice(0, 100);
+  return '';
 }
