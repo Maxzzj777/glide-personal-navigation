@@ -32,6 +32,7 @@
 .site-grid{grid-template-columns:repeat(8,minmax(0,1fr));column-gap:14px;row-gap:20px}
 .site-card{min-height:112px;padding:6px 2px}.site-icon{width:62px;height:62px;border-radius:18px}.site-icon img{width:100%;height:100%;padding:0;object-fit:cover;border-radius:inherit}.site-name{max-width:104px;margin-top:9px;font-size:13px}
 .add-bookmark-card{min-height:112px}.add-bookmark-icon{width:62px;height:62px;border-radius:18px}
+.add-bookmark-card{padding:7px 2px;justify-content:flex-start;gap:0}.add-bookmark-card>span:last-child{width:100%;max-width:104px;min-height:36px;margin-top:9px;line-height:1.25;text-align:center}
 .bottom-nav{left:50%}
 .mobile-only{display:none!important}.scrim{display:none!important}
 
