@@ -78,8 +78,7 @@ export default {
 
       if (url.pathname === '/api/ai/config' && request.method === 'GET') {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
-        const raw = await env.GLIDE_KV.get(AI_CONFIG_KEY);
-        return json(raw ? JSON.parse(raw) : DEFAULT_AI_CONFIG, 200, cors);
+        return json(await getAIConfig(env), 200, cors);
       }
 
       if (url.pathname === '/api/ai/config' && request.method === 'PUT') {
@@ -327,7 +326,12 @@ const DEFAULT_AI_CONFIG = { provider: 'workers-ai', apiKey: '', baseUrl: '', mod
 async function getAIConfig(env) {
   const raw = await env.GLIDE_KV.get(AI_CONFIG_KEY);
   if (!raw) return { ...DEFAULT_AI_CONFIG };
-  try { return { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) }; } catch { return { ...DEFAULT_AI_CONFIG }; }
+  try {
+    const config = { ...DEFAULT_AI_CONFIG, ...JSON.parse(raw) };
+    // 兼容旧配置：cloudflare → workers-ai
+    if (!['workers-ai', 'openai', 'gemini'].includes(config.provider)) config.provider = 'workers-ai';
+    return config;
+  } catch { return { ...DEFAULT_AI_CONFIG }; }
 }
 
 async function generateRemark(env, name, url, meta) {
