@@ -101,14 +101,29 @@
       <div class="modal-head"><div><p class="eyebrow">AI SETTINGS</p><h2>AI 设置</h2></div><button class="icon-button" id="aiClose" type="button" aria-label="关闭 AI 设置">×</button></div>
       <label>AI 服务<select id="aiProvider">
         <option value="workers-ai">Cloudflare Workers AI（免费）</option>
-        <option value="openai">OpenAI 兼容 API</option>
+        <option value="openai">自定义 API（OpenAI 兼容）</option>
         <option value="gemini">Google Gemini</option>
       </select></label>
       <label id="aiModelField">模型<input id="aiModel" type="text" placeholder="留空使用默认模型" autocomplete="off"></label>
       <label id="aiKeyField" hidden>API Key<input id="aiApiKey" type="password" placeholder="填写服务商的 key" autocomplete="off"></label>
-      <label id="aiBaseUrlField" hidden>API 地址<input id="aiBaseUrl" type="text" placeholder="https://api.xxx.com/v1" autocomplete="off"></label>
+      <label id="aiBaseUrlField" hidden>API 地址<input id="aiBaseUrl" type="text" placeholder="如 https://api.deepseek.com/v1" autocomplete="off"></label>
       <p class="form-error" id="aiError" hidden></p>
+      <div class="ai-divider"></div>
+      <div class="ai-batch-entry" id="aiBatchButton" role="button" tabindex="0"><span class="ic">✨</span><span><b>批量生成备注</b><small>为所有书签生成中文备注</small></span><span class="go">›</span></div>
       <div class="modal-actions"><span></span><button class="ghost" type="button" id="aiCancel">取消</button><button class="primary" type="submit">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="batchDialog" class="modal glass small-modal">
+    <form id="batchForm" method="dialog">
+      <div class="modal-head"><div><p class="eyebrow">BATCH</p><h2>批量生成备注</h2></div><button class="icon-button" id="batchClose" type="button" aria-label="关闭批量生成">×</button></div>
+      <p class="batch-desc" id="batchDesc">将为 <b>全部书签</b> 用 AI 生成中文备注，<b>可能覆盖已有备注</b>。</p>
+      <div class="batch-list">
+        <div>书签总数 <b id="batchTotal">0 个</b></div>
+        <div>提示 <b>免费额度可能不够一次跑完</b></div>
+      </div>
+      <p class="batch-progress" id="batchProgress" hidden></p>
+      <div class="modal-actions"><span></span><button class="ghost" type="button" id="batchCancel">取消</button><button class="primary" type="submit" id="batchStart">开始生成</button></div>
     </form>
   </dialog>
 
