@@ -69,5 +69,5 @@ body:not(.admin-mode) .bottom-nav{display:none}
 .site-icon{border-radius:10px!important}
 .site-card:hover{background:transparent!important;box-shadow:none!important;transform:none!important}
 
-/* 分类选中：文字变亮加粗，无背景（方案2） */
-.category.active{background:transparent!important;box-shadow:none!important;font-weight:800}
+/* 分类悬停：文字变亮加粗，无背景（方案2）；选中态恢复原站高亮 */
+.category:hover{background:transparent!important;box-shadow:none!important;font-weight:800;color:var(--text)!important}
