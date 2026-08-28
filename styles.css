@@ -178,8 +178,8 @@ body.admin-mode .bottom-nav .admin-only{display:flex!important}
 .remember-hint{font-size:11.5px;color:var(--text-low,#9aa3b2);line-height:1.5;margin:8px 2px 0}
 
 /* ===== 浅色主题：暖米色系（顶部导航/按钮/分类栏全暖色，无光斑） ===== */
-[data-theme="light"]{--bg:#e6dbc6;--text:#3d352c;--muted:#8a7f6d;--line:rgba(150,120,85,.18);--accent:#d9923e;--accent2:#c46a3d;--panel:rgba(255,250,240,.72);--panel-solid:#fdfaf2}
-[data-theme="light"] .aurora{background:linear-gradient(160deg,#ece2cf,#e2d5bd 55%,#e7dbc4)}
+[data-theme="light"]{--bg:#d6c6a6;--text:#3d352c;--muted:#8a7f6d;--line:rgba(150,120,85,.18);--accent:#d9923e;--accent2:#c46a3d;--panel:rgba(255,250,240,.72);--panel-solid:#fdfaf2}
+[data-theme="light"] .aurora{background:linear-gradient(160deg,#ddd0b8,#cfbe9e 55%,#d8c8a9)}
 [data-theme="light"] .aurora i{opacity:0}
 [data-theme="light"] .site-header{background:rgba(255,252,246,.78);border-bottom:1px solid rgba(150,120,85,.16);box-shadow:0 8px 20px rgba(140,110,70,.08)}
 [data-theme="light"] .brand{color:#4a4238}
