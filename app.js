@@ -91,4 +91,7 @@ $('#batchClose').onclick=$('#batchCancel').onclick=()=>$('#batchDialog').close()
 $('#batchForm').addEventListener('submit',async e=>{e.preventDefault();await runBatch()});
 async function runBatch(){const sites=state.categories.flatMap(c=>c.sites.map(s=>({...s,categoryId:c.id})));const progress=$('#batchProgress');const startBtn=$('#batchStart');progress.hidden=false;startBtn.disabled=true;$('#batchDesc').textContent=`正在为 ${sites.length} 个书签生成备注，请稍候…`;let done=0,failed=0;for(const s of sites){try{const result=await api('/api/remark',{method:'POST',body:JSON.stringify({url:s.url,name:s.name})});const cat=state.categories.find(c=>c.id===s.categoryId);const site=cat?.sites.find(x=>x.id===s.id);if(site&&result.text)site.detail=result.text;done++}catch{failed++;if(failed>5){toast('连续失败过多，已停止');break}}progress.textContent=`进度 ${done+failed}/${sites.length}（成功 ${done}，失败 ${failed}）`}save('批量备注已生成');render();$('#batchDialog').close();progress.hidden=true;startBtn.disabled=false;toast(`批量生成完成：成功 ${done}，失败 ${failed}`)}
 
-matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',applyTheme);render();loadCloudState();
+// 分类栏：初始左端不虚化，向左滑动后左端渐隐提示（配合 CSS mask）
+const catList=$('#categoryList');function updateCatMask(){catList.classList.toggle('scrolled',catList.scrollLeft>0)}catList.addEventListener('scroll',updateCatMask);
+
+matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',applyTheme);render();loadCloudState();updateCatMask();
