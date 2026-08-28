@@ -105,7 +105,7 @@
       <p class="form-error" id="adminError" hidden>账号或密码错误</p>
       <label class="remember-row"><input type="checkbox" id="rememberLogin"><span>记住密码（下次登录自动填入）</span></label>
       <p class="remember-hint">⚠️ 密码以明文保存在本机浏览器，同一浏览器的人可查看；请勿在公用电脑勾选</p>
-      <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" id="adminSubmitLabel" type="submit">登录</button></div>
+      <div class="modal-actions"><span></span><button class="ghost" type="button" id="adminCancel">取消</button><button class="primary" id="adminSubmitLabel" type="submit">登录</button></div>
     </form>
   </dialog>
 
@@ -116,7 +116,7 @@
       <label>新密码<span class="password-field"><input id="newPassword" type="password" autocomplete="new-password" placeholder="留空可清除密码"><button class="password-toggle" type="button" data-password-target="newPassword" aria-label="显示新密码" aria-pressed="false">👁</button></span></label>
       <label>确认新密码<span class="password-field"><input id="newPasswordConfirm" type="password" autocomplete="new-password"><button class="password-toggle" type="button" data-password-target="newPasswordConfirm" aria-label="显示确认密码" aria-pressed="false">👁</button></span></label>
       <p class="form-error" id="passwordError" hidden></p>
-      <div class="modal-actions"><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">保存新密码</button></div>
+      <div class="modal-actions"><span></span><button class="ghost" type="button" id="passwordCancel">取消</button><button class="primary" type="submit">保存新密码</button></div>
     </form>
   </dialog>
 
@@ -126,7 +126,7 @@
       <label>图片链接或纯黑色<input id="backgroundUrl" type="text" placeholder="输入 black，或粘贴图片链接"></label>
       <div class="background-preview" id="backgroundPreview"><span>背景预览</span></div>
       <p class="background-hint">请使用可公开访问的 HTTPS 图片链接。</p>
-      <div class="modal-actions"><button class="danger ghost" type="button" id="resetBackground">恢复默认</button><span></span><button class="ghost" value="cancel">取消</button><button class="primary" type="submit">应用背景</button></div>
+      <div class="modal-actions"><button class="danger ghost" type="button" id="resetBackground">恢复默认</button><span></span><button class="ghost" type="button" id="backgroundCancel">取消</button><button class="primary" type="submit">应用背景</button></div>
     </form>
   </dialog>
 
@@ -164,6 +164,6 @@
   <dialog class="toast" id="toast" role="status"></dialog>
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>
