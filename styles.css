@@ -150,7 +150,6 @@ body.admin-mode .bottom-nav{display:flex!important}
 body.admin-mode .bottom-nav .admin-only{display:flex!important}
 .bottom-nav .admin-logout{color:#ff5668!important}
 .bottom-nav .admin-logout:hover{background:rgba(225,77,98,.18)!important;color:#ff7b7b!important}
-.category-list{justify-content:center}
 .category.active{background:#2b3346!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045)!important}
 @media(max-width:760px){.top-right .ai-entry{right:70px}.bottom-nav{bottom:12px!important}.main{padding-bottom:110px!important}}
 
@@ -159,6 +158,5 @@ body.admin-mode .bottom-nav .admin-only{display:flex!important}
 
 /* 分类栏：精致深色圆角框（与整体玻璃质感协调） */
 .category-strip{background:linear-gradient(145deg,#182130,#0e151f);border:1px solid rgba(148,163,184,.16);border-radius:22px;padding:7px 14px;box-shadow:0 10px 28px rgba(15,23,42,.3),inset 0 1px 0 rgba(255,255,255,.04)}
-.category{transition:background .18s,color .18s}
-.category-list{padding:0 4px}
+.category{transition:background .18s,color .18s,transform .18s}
 @media(max-width:760px){.category-strip{border-radius:18px;padding:6px 10px}}
