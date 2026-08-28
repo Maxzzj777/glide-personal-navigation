@@ -176,3 +176,13 @@ body.admin-mode .bottom-nav .admin-only{display:flex!important}
 .remember-row{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:500;color:var(--text-hi,#f4f6fb);cursor:pointer}
 .remember-row input{width:auto;margin:0;accent-color:#526dff}
 .remember-hint{font-size:11.5px;color:var(--text-low,#9aa3b2);line-height:1.5;margin:8px 2px 0}
+
+/* 亮色主题：柔和暖白渐变 + 低饱和光斑（替代纯白背景） */
+:root{--bg:#f4f3ee}
+.aurora{background:linear-gradient(160deg,#f8f6f0,#eef1f5 55%,#f6f1ec)}
+.aurora i{display:block;opacity:.5;filter:blur(70px)}
+.aurora i:nth-child(1){background:#dde3f2}
+.aurora i:nth-child(2){background:#f0dfe7}
+.aurora.solid-black{background:#000!important}
+[data-theme="dark"] .aurora{background:#232428}
+[data-theme="dark"] .aurora i{opacity:.22}
