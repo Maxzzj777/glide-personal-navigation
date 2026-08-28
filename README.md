@@ -13,6 +13,26 @@
 
 ![管理员主页](admin.png)
 
+## 核心功能演示
+
+### ✨ AI 一键生成书签中文备注
+
+![AI 生成备注](docs/demo/ai.gif)
+
+*打开任意书签的编辑弹窗，点「✨ 生成备注」自动生成中文简介，调用 Cloudflare Workers AI（免费）。*
+
+### 🌗 深浅主题切换
+
+![主题切换](docs/demo/theme.gif)
+
+*深色玻璃拟态 ↔ 暖米色浅色主题无缝切换，所有控件（顶部导航/按钮/分类栏/弹窗/表情选择器）自动同色系变化。*
+
+### 📂 分类栏贴边渐隐
+
+![分类栏滑动](docs/demo/category.gif)
+
+*默认右端虚化提示"还有分类"，向左滑动后左端才出现渐隐，不打扰第一个分类的完整展示。*
+
 ## 功能亮点
 
 - ✨ **AI 自动生成书签中文简介**：基于 Cloudflare Workers AI（免费），一键给书签填入简洁准确的中文描述；也支持接入自定义 API（DeepSeek / 智谱 / Gemini 等 OpenAI 兼容服务）
@@ -162,6 +182,10 @@ worker/               Cloudflare Worker 后端
 CLOUDFLARE-DEPLOY.md  详细 Cloudflare 部署参考
 visitor.png           游客主页预览
 admin.png             管理员主页预览
+docs/demo/            README 演示 GIF
+  ├ theme.gif         主题切换演示
+  ├ category.gif      分类栏滑动渐隐演示
+  └ ai.gif            AI 生成备注演示
 ```
 
 ## Fork 隔离
