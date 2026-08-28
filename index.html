@@ -5,29 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eef4ff">
   <title>Glide · 个人导航</title>
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="icon" href="glide-logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="glide-logo.png">
+  <link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
   <div class="top-right">
-    <button class="ai-entry admin-only" id="aiSettingsButton" title="AI 设置" aria-label="打开 AI 设置">✨</button>
-    <button class="admin-avatar" id="adminToggle" title="管理员" aria-label="管理员开关"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="#fff"/><path d="M5.4 19.2c0-3.5 3-5.8 6.6-5.8s6.6 2.3 6.6 5.8v.4H5.4v-.4z" fill="#fff"/></svg><span class="status-dot" id="adminStatusDot"></span></button>
+    <button class="header-icon ai-entry admin-only" id="aiSettingsButton" title="AI 设置" aria-label="打开 AI 设置"><span aria-hidden="true">✨</span></button>
+    <div class="admin-menu-wrap">
+      <button class="admin-avatar" id="adminToggle" aria-label="管理员登录" aria-expanded="false"><span class="material-symbols-rounded" aria-hidden="true">person</span><i aria-hidden="true"></i><b id="adminLabel">管理员</b></button>
+    </div>
   </div>
   <div class="app-shell">
     <header class="site-header">
       <div class="topbar">
-        <div class="brand"><span class="brand-mark">G</span><span>Glide</span></div>
-        <div class="search glass"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索网站或网址…" autocomplete="off"><kbd>⌘ K</kbd></div>
+        <div class="brand"><span class="brand-mark" aria-hidden="true"><img src="glide-logo.png" alt=""></span><span>Glide</span></div>
+        <div class="search"><span class="material-symbols-rounded" aria-hidden="true">search</span><input id="searchInput" type="search" placeholder="搜索网站或网址..." autocomplete="off"><kbd>⌘ K</kbd></div>
         <div class="header-actions">
-          <button class="add-site primary admin-only" id="addSite">＋ <span>添加网站</span></button>
-          <a class="nav-btn" href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" title="GitHub 仓库" aria-label="打开 GitHub 项目"><span>⌘</span><b>GitHub</b></a>
-          <button class="icon-button glass" id="themeButton" title="切换主题" aria-label="切换主题">◐</button>
+          <button class="add-site primary admin-only" id="addSite"><span class="material-symbols-rounded" aria-hidden="true">add</span><span>添加网站</span></button>
+          <a class="header-github" href="https://github.com/Maxzzj777/glide-personal-navigation" target="_blank" rel="noopener" aria-label="打开 GitHub 项目"><img src="github.svg" alt=""><b>GitHub</b></a>
+          <button class="header-icon" id="themeButton" title="切换主题" aria-label="切换主题"><span class="material-symbols-rounded" aria-hidden="true">contrast</span></button>
         </div>
       </div>
-      <div class="category-strip glass">
+      <div class="category-strip">
         <nav id="categoryList" class="category-list" aria-label="网站分类"></nav>
         <button class="add-category admin-only" id="addCategory"><span>＋</span> 新建分类</button>
-        <button class="expand-toggle" id="expandToggle" title="展开分组" aria-label="展开或收起分组">▾</button>
+        <button class="group-expand" id="groupExpandButton" type="button" aria-label="展开全部分组" aria-expanded="false"><span class="material-symbols-rounded" aria-hidden="true">expand_more</span></button>
       </div>
     </header>
     <main class="main">
@@ -38,7 +42,7 @@
       </section>
       <div class="site-sections" id="siteGrid" aria-live="polite"></div>
       <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✦</div><h2>这里还没有网站</h2><p>添加一个常用网站，或从其他分类拖进来。</p><button class="primary" id="emptyAdd">添加第一个网站</button></div>
-      <nav class="bottom-nav glass" aria-label="底部导航"><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span>▧</span><b>背景</b></button><button class="admin-only" id="changePasswordButton" aria-label="修改管理员密码"><span>⌁</span><b>密码</b></button><button class="admin-only logout" id="logoutButton" aria-label="退出管理模式"><span>⏻</span><b>退出</b></button></nav>
+      <nav class="bottom-nav glass" aria-label="管理员操作"><button class="admin-only" id="backgroundButton" aria-label="更换网页背景"><span class="material-symbols-rounded" aria-hidden="true">texture</span><b>背景</b></button><button class="admin-only" id="changePasswordButton" aria-label="修改管理员密码"><span class="material-symbols-rounded" aria-hidden="true">lock</span><b>密码</b></button><button class="admin-only admin-logout" id="logoutButton" aria-label="退出管理员模式"><span class="material-symbols-rounded" aria-hidden="true">power_settings_new</span><b>退出</b></button></nav>
     </main>
   </div>
 
@@ -61,6 +65,8 @@
       <div class="modal-head"><h2 id="categoryDialogTitle">新建分类</h2><button class="icon-button" id="categoryClose" type="button" aria-label="关闭新建分组">×</button></div>
       <input type="hidden" id="categoryId">
       <label>分类名称<input id="categoryName" required maxlength="20" placeholder="例如：阅读"></label>
+      <label>分类图标 <small>可选</small><input id="categoryIcon" list="categoryIconChoices" maxlength="8" placeholder="如：✦、🤖、🎵，留空不显示"></label>
+      <datalist id="categoryIconChoices"><option value="✦"></option><option value="⌘"></option><option value="🤖"></option><option value="🎵"></option><option value="🛠️"></option><option value="📬"></option><option value="☁️"></option><option value="📚"></option></datalist>
       <div class="modal-actions"><button class="danger ghost" type="button" id="deleteCategory" hidden>删除</button><span></span><button class="ghost" id="categoryCancel" type="button">取消</button><button class="primary" type="submit">保存</button></div>
     </form>
   </dialog>
@@ -130,6 +136,6 @@
   <dialog class="toast" id="toast" role="status"></dialog>
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
