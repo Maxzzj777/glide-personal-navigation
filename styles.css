@@ -185,4 +185,4 @@ body.admin-mode .bottom-nav .admin-only{display:flex!important}
 .aurora i:nth-child(2){background:#f0dfe7}
 .aurora.solid-black{background:#000!important}
 [data-theme="dark"] .aurora{background:#232428}
-[data-theme="dark"] .aurora i{opacity:.22}
+[data-theme="dark"] .aurora i{opacity:0}
