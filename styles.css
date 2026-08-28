@@ -171,3 +171,8 @@ body.admin-mode .bottom-nav .admin-only{display:flex!important}
 .category-list{-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 10px),transparent 100%);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 10px),transparent 100%);transition:mask-image .2s}
 .category-list.scrolled{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 8px,#000 calc(100% - 10px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 8px,#000 calc(100% - 10px),transparent 100%)}
 @media(max-width:760px){.category-strip{border-radius:18px;padding:6px 12px}.category-list{-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 8px),transparent 100%);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 8px),transparent 100%)}.category-list.scrolled{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6px,#000 calc(100% - 8px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 6px,#000 calc(100% - 8px),transparent 100%)}}
+
+/* 登录弹窗：记住登录状态 */
+.remember-row{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:500;color:var(--text-hi,#f4f6fb);cursor:pointer}
+.remember-row input{width:auto;margin:0;accent-color:#526dff}
+.remember-hint{font-size:11.5px;color:var(--text-low,#9aa3b2);line-height:1.5;margin:8px 2px 0}
