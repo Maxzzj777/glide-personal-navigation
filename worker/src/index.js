@@ -137,6 +137,39 @@ function looksLikeImage(buf, ct) {
   return false;
 }
 
+function imageSize(buf) {
+  if (!buf || buf.length < 8) return null;
+  const b = buf;
+  // PNG：IHDR 宽高在第 16-24 字节
+  if (b[0] === 0x89 && b[1] === 0x50) {
+    if (b.length >= 24) return { w: ((b[16] << 24) | (b[17] << 16) | (b[18] << 8) | b[19]) >>> 0, h: ((b[20] << 24) | (b[21] << 16) | (b[22] << 8) | b[23]) >>> 0 };
+    return null;
+  }
+  // ICO：第一个条目宽高在第 6、7 字节（0 表示 256）
+  if (b[0] === 0x00 && b[1] === 0x00 && b[2] === 0x01 && b[3] === 0x00) {
+    if (b.length >= 8) return { w: b[6] || 256, h: b[7] || 256 };
+    return null;
+  }
+  // JPEG：遍历 SOF 段取尺寸
+  if (b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) { i++; continue; }
+      const m = b[i + 1];
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+        return { w: (b[i + 7] << 8) | b[i + 8], h: (b[i + 5] << 8) | b[i + 6] };
+      }
+      if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
+      const len = (b[i + 2] << 8) | b[i + 3];
+      i += 2 + len;
+    }
+    return null;
+  }
+  // SVG/XML 矢量：任意缩放清晰
+  if (b[0] === 0x3c) return { w: 512, h: 512 };
+  return null;
+}
+
 async function favicon(value, cors) {
   const domain = value.trim().toLowerCase().replace(/^www\./, '');
   if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(domain)) {
@@ -286,10 +319,11 @@ async function fetchHDIcon(domain) {
       if (!r.ok) continue;
       const ct = r.headers.get('Content-Type') || '';
       const buf = new Uint8Array(await r.arrayBuffer());
-      // 必须是图片（SPA 路由兜底会返回 HTML，靠 looksLikeImage 精确识别跳过）
-      if (looksLikeImage(buf, ct)) {
-        return `${base}${p}`;
-      }
+      if (!looksLikeImage(buf, ct)) continue;
+      // 低清跳过（favicon.ico 常是 32×32，让 gstatic 拿到高清版）
+      const dim = imageSize(buf);
+      if (dim && dim.w < 48 && dim.h < 48) continue;
+      return `${base}${p}`;
     } catch { /* 下一个 */ }
   }
 
