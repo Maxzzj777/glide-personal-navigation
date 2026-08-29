@@ -145,7 +145,23 @@ async function favicon(value, cors) {
     } catch { /* 继续 fallback */ }
   }
 
-  // 2. fallback：Google s2 favicons 256px
+  // 2. fallback：icon.horse 聚合源（覆盖比 Google 广，含国内站点）
+  try {
+    const horse = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
+      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
+    });
+    if (!horse.ok) throw new Error('icon.horse failed');
+    return new Response(horse.body, {
+      status: 200,
+      headers: {
+        ...cors,
+        'Content-Type': horse.headers.get('Content-Type') || 'image/png',
+        'Cache-Control': 'public, max-age=604800'
+      }
+    });
+  } catch { /* 继续 fallback */ }
+
+  // 3. fallback：Google s2 favicons 256px
   try {
     const source = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
     const response = await fetch(source, {
@@ -161,7 +177,7 @@ async function favicon(value, cors) {
       }
     });
   } catch {
-    // 3. fallback：首字母 SVG
+    // 4. fallback：首字母 SVG
     const letter = domain[0].toUpperCase();
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#5f6066"/><text x="64" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Arial" font-size="58" font-weight="700" fill="white">${letter}</text></svg>`;
     return new Response(svg, {
