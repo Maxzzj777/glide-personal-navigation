@@ -7,7 +7,7 @@
   <title>Glide · 个人导航</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=85">
+  <link rel="stylesheet" href="styles.css?v=86">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
@@ -53,8 +53,8 @@
       <label>分类<select id="siteCategory"></select></label>
       <label>名称<input id="siteName" required maxlength="40" placeholder="例如：Apple"></label>
       <label>网址 <small>填写后自动补充图标</small><input id="siteUrl" required type="url" placeholder="https://apple.com"></label>
-      <div class="ai-gen-row admin-only"><button class="ai-gen-btn" type="button" id="aiGenerateIcon">🖼 更新图标</button></div>
       <label>图标 <small>可填 emoji、图片网址，留空则显示首字母</small><input id="siteIcon" placeholder=" 或 https://…"></label>
+      <div class="ai-gen-row admin-only"><button class="ai-gen-btn" type="button" id="aiGenerateIcon">🖼 更新图标</button></div>
       <label>详情备注 <small>鼠标悬停卡片时显示</small><input id="siteDetail" maxlength="100" placeholder="例如：工作常用账号、使用说明等"></label>
       <div class="ai-gen-row admin-only"><button class="ai-gen-btn" type="button" id="aiGenerateDetail">✨ 生成备注</button></div>
       <div class="modal-actions"><button class="danger ghost" type="button" id="deleteSite" hidden>删除</button><span></span><button class="ghost" id="siteCancel" type="button">取消</button><button class="primary" type="submit">保存</button></div>
