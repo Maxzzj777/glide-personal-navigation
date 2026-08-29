@@ -127,74 +127,100 @@ async function favicon(value, cors) {
     return json({ error: '图标域名无效' }, 400, cors);
   }
 
-  // 1. 抓网站 HTML，解析高清图标（apple-touch-icon 优先）
+  // 多源候选：抓首页解析的高清图标优先，其余并行对比选最高清
+  const candidates = [];
   const hdUrl = await fetchHDIcon(domain);
-  if (hdUrl) {
-    try {
-      const icon = await fetch(hdUrl, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
-      if (icon.ok) {
-        return new Response(icon.body, {
-          status: 200,
-          headers: {
-            ...cors,
-            'Content-Type': icon.headers.get('Content-Type') || 'image/png',
-            'Cache-Control': 'public, max-age=604800'
-          }
-        });
-      }
-    } catch { /* 继续 fallback */ }
+  if (hdUrl) candidates.push({ url: hdUrl, src: 'page' });
+  candidates.push(
+    { url: `https://icon.horse/icon/${encodeURIComponent(domain)}`, src: 'horse' },
+    { url: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`, src: 'google' },
+    { url: `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`, src: 'ddg' }
+  );
+
+  const fetched = await Promise.all(candidates.map(fetchIconCandidate));
+
+  let best = null;
+  for (const r of fetched) {
+    if (!r) continue;
+    if (!best || r.w * r.h > best.w * best.h) best = r;
   }
 
-  // 2. fallback：icon.horse 聚合源（高清，覆盖国内站点）
-  try {
-    const horse = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
-      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
+  if (best) {
+    return new Response(best.body, {
+      status: 200,
+      headers: { ...cors, 'Content-Type': best.ct || 'image/png', 'Cache-Control': 'public, max-age=604800' }
     });
-    if (!horse.ok) throw new Error('icon.horse failed');
-    const hct = horse.headers.get('Content-Type') || '';
-    if (hct.includes('svg')) {
-      const hsvg = await horse.text();
-      // icon.horse 对无图标站点返回紫色渐变占位图，识别并跳过
-      if (hsvg.includes('#4F46E5') || hsvg.includes('#7C3AED')) throw new Error('icon.horse placeholder');
-      return new Response(hsvg, {
-        status: 200,
-        headers: { ...cors, 'Content-Type': hct, 'Cache-Control': 'public, max-age=604800' }
-      });
+  }
+
+  // 首字母兜底
+  const letter = domain[0].toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#5f6066"/><text x="64" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Arial" font-size="58" font-weight="700" fill="white">${letter}</text></svg>`;
+  return new Response(svg, {
+    status: 200,
+    headers: { ...cors, 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
+  });
+}
+
+async function fetchIconCandidate(c) {
+  try {
+    const r = await fetch(c.url, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+    if (!r.ok) return null;
+    const ct = r.headers.get('Content-Type') || '';
+    const buf = new Uint8Array(await r.arrayBuffer());
+    if (buf.length === 0) return null;
+
+    // 占位图识别：icon.horse 紫色渐变默认占位 SVG
+    if (ct.includes('svg') || buf[0] === 0x3c) {
+      const s = new TextDecoder().decode(buf.slice(0, 3000));
+      if (s.includes('#4F46E5') || s.includes('#7C3AED')) return null;
     }
-    return new Response(horse.body, {
-      status: 200,
-      headers: {
-        ...cors,
-        'Content-Type': hct || 'image/png',
-        'Cache-Control': 'public, max-age=604800'
-      }
-    });
-  } catch { /* 继续 fallback */ }
 
-  // 3. fallback：Google s2 favicons 256px
-  try {
-    const source = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
-    const response = await fetch(source, {
-      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
-    });
-    if (!response.ok) throw new Error('favicon fetch failed');
-    return new Response(response.body, {
-      status: 200,
-      headers: {
-        ...cors,
-        'Content-Type': response.headers.get('Content-Type') || 'image/png',
-        'Cache-Control': 'public, max-age=604800'
-      }
-    });
+    const dim = imageSize(buf, ct);
+    if (!dim) return null;
+
+    // 低清排除（宽或高 < 48px）
+    if (dim.w < 48 || dim.h < 48) return null;
+
+    // 灰字占位：PNG 大图但文件极小（icon.horse 首字母占位，200px 以上却 < 4KB）
+    if (buf[0] === 0x89 && dim.w >= 200 && dim.h >= 200 && buf.length < 4000) return null;
+
+    return { body: buf, w: dim.w, h: dim.h, ct };
   } catch {
-    // 4. fallback：首字母 SVG
-    const letter = domain[0].toUpperCase();
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#5f6066"/><text x="64" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Arial" font-size="58" font-weight="700" fill="white">${letter}</text></svg>`;
-    return new Response(svg, {
-      status: 200,
-      headers: { ...cors, 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
-    });
+    return null;
   }
+}
+
+function imageSize(buf, ct) {
+  // SVG 矢量：任意缩放都清晰，给高分
+  if (ct.includes('svg') || buf[0] === 0x3c) {
+    return { w: 512, h: 512 };
+  }
+  // PNG
+  if (buf.length >= 24 && buf[0] === 0x89 && buf[1] === 0x50) {
+    const w = ((buf[16] << 24) | (buf[17] << 16) | (buf[18] << 8) | buf[19]) >>> 0;
+    const h = ((buf[20] << 24) | (buf[21] << 16) | (buf[22] << 8) | buf[23]) >>> 0;
+    return { w, h };
+  }
+  // ICO（取第一个条目尺寸）
+  if (buf.length >= 8 && buf[0] === 0 && buf[1] === 0 && buf[2] === 1 && buf[3] === 0) {
+    const w = buf[6] || 256, h = buf[7] || 256;
+    return { w, h };
+  }
+  // JPEG
+  if (buf.length >= 4 && buf[0] === 0xff && buf[1] === 0xd8) {
+    let i = 2;
+    while (i + 9 < buf.length) {
+      if (buf[i] !== 0xff) { i++; continue; }
+      const m = buf[i + 1];
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
+        return { w: (buf[i + 7] << 8) | buf[i + 8], h: (buf[i + 5] << 8) | buf[i + 6] };
+      }
+      if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }
+      const len = (buf[i + 2] << 8) | buf[i + 3];
+      i += 2 + len;
+    }
+  }
+  return null;
 }
 
 async function fetchHDIcon(domain) {
