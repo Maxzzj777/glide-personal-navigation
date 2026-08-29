@@ -185,46 +185,106 @@ async function favicon(value, cors) {
 }
 
 async function fetchHDIcon(domain) {
+  const base = `https://${domain}`;
   try {
-    const htmlResp = await fetch(`https://${domain}/`, {
+    const htmlResp = await fetch(`${base}/`, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' },
       redirect: 'follow',
       cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 }
     });
     if (!htmlResp.ok) return null;
     const html = await htmlResp.text();
-    return parseHDIcon(html, domain);
-  } catch {
-    return null;
+
+    const candidates = parseLinkIcons(html, base);
+
+    // manifest 解析（<link rel="manifest"> 里的 icons）
+    const manifestLink = (html.match(/<link\b[^>]*rel=["']manifest["'][^>]*>/i) || [''])[0];
+    const mh = (manifestLink.match(/\bhref=["']([^"']*)["']/i) || ['', ''])[1];
+    if (mh) {
+      try {
+        const mabs = new URL(mh, base).href;
+        const mr = await fetch(mabs, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+        if (mr.ok) {
+          const manifest = await mr.json();
+          for (const icon of (manifest.icons || [])) {
+            if (icon.src) {
+              try { candidates.push({ abs: new URL(icon.src, base).href, rel: icon.purpose || 'icon', sizes: icon.sizes || '', type: icon.type || '' }); } catch { /* 跳过非法 src */ }
+            }
+          }
+        }
+      } catch { /* manifest 解析失败忽略 */ }
+    }
+
+    // 评分选最优
+    let best = null, bestScore = -Infinity;
+    for (const cand of candidates) {
+      const s = scoreIcon(cand);
+      if (s > bestScore) { bestScore = s; best = cand.abs; }
+    }
+    if (best) return best;
+  } catch { /* 首页抓取失败，走默认路径 */ }
+
+  // 默认路径兜底
+  const defaults = ['/apple-touch-icon.png', '/favicon.svg', '/favicon.png', '/favicon.ico'];
+  for (const p of defaults) {
+    try {
+      const r = await fetch(`${base}${p}`, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+      const ct = r.headers.get('Content-Type') || '';
+      if (r.ok && /image|icon/.test(ct)) return `${base}${p}`;
+    } catch { /* 下一个 */ }
   }
+  return null;
 }
 
-function parseHDIcon(html, domain) {
-  const base = `https://${domain}`;
-  let bestApple = null;
-  let bestAppleSize = 0;
-  let bestIcon = null;
-  let bestIconSize = 0;
-
+function parseLinkIcons(html, base) {
+  const out = [];
   const links = html.match(/<link\b[^>]*>/gi) || [];
   for (const link of links) {
     const rel = (link.match(/\brel=["']([^"']*)["']/i) || ['', ''])[1].toLowerCase();
     const href = (link.match(/\bhref=["']([^"']*)["']/i) || ['', ''])[1];
     const sizes = (link.match(/\bsizes=["']([^"']*)["']/i) || ['', ''])[1];
-    if (!href || !rel.includes('icon')) continue;
-    let abs;
-    try { abs = new URL(href, base).href; } catch { continue; }
-    const size = parseInt(sizes, 10) || 0;
+    const type = (link.match(/\btype=["']([^"']*)["']/i) || ['', ''])[1];
+    if (!href) continue;
+    if (!/icon|apple-touch|mask/.test(rel)) continue;
+    try { out.push({ abs: new URL(href, base).href, rel, sizes, type }); } catch { /* 跳过非法 URL */ }
+  }
+  return out;
+}
 
-    if (rel.includes('apple-touch-icon')) {
-      const s = size || 180;
-      if (s > bestAppleSize) { bestAppleSize = s; bestApple = abs; }
-    } else if (rel.includes('icon')) {
-      if (size > bestIconSize) { bestIconSize = size; bestIcon = abs; }
-    }
+function scoreIcon(c) {
+  let score = 0;
+  const u = c.abs.toLowerCase().split('?')[0];
+
+  // 格式优先：SVG > PNG > WebP > JPG/ICO
+  if (u.endsWith('.svg') || (c.type && c.type.includes('svg'))) score += 100;
+  else if (u.endsWith('.png') || (c.type && c.type.includes('png'))) score += 90;
+  else if (u.endsWith('.webp') || (c.type && c.type.includes('webp'))) score += 85;
+  else if (u.endsWith('.ico')) score += 50;
+  else if (u.endsWith('.jpg') || u.endsWith('.jpeg')) score += 55;
+  else score += 65;
+
+  // 尺寸评分 + 方形加分
+  const m = (c.sizes || '').match(/(\d+)\s*[x×X]\s*(\d+)/);
+  if (m) {
+    const w = +m[1], h = +m[2], dim = Math.min(w, h);
+    if (dim >= 512) score += 60;
+    else if (dim >= 256) score += 55;
+    else if (dim >= 192) score += 50;
+    else if (dim >= 180) score += 48;
+    else if (dim >= 128) score += 45;
+    else if (dim >= 96) score += 35;
+    else if (dim >= 64) score += 25;
+    else score -= 40; // 16/32 低清惩罚
+    if (Math.abs(w - h) <= 1) score += 15; // 方形
+  } else {
+    score += 30; // 无 sizes（常见于 SVG 或 favicon.ico）
   }
 
-  return bestApple || bestIcon || null;
+  // apple-touch / mask 加分
+  if (c.rel.includes('apple-touch')) score += 20;
+  else if (c.rel.includes('mask')) score += 5;
+
+  return score;
 }
 
 function corsHeaders(origin) {
