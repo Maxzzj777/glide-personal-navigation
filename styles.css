@@ -226,3 +226,4 @@ body.admin-mode .bottom-nav .admin-only{display:flex!important}
 [data-theme="dark"] .aurora{background:#232428}
 [data-theme="dark"] .aurora i{opacity:0}
 [data-theme="dark"] .admin-avatar i{border-color:#0a0f17}
+body:not(.admin-mode) .cat-edit,body:not(.admin-mode) .site-card .edit{display:none}
