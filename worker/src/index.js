@@ -145,23 +145,7 @@ async function favicon(value, cors) {
     } catch { /* 继续 fallback */ }
   }
 
-  // 2. fallback：icon.horse 聚合源（覆盖比 Google 广，含国内站点）
-  try {
-    const horse = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
-      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
-    });
-    if (!horse.ok) throw new Error('icon.horse failed');
-    return new Response(horse.body, {
-      status: 200,
-      headers: {
-        ...cors,
-        'Content-Type': horse.headers.get('Content-Type') || 'image/png',
-        'Cache-Control': 'public, max-age=604800'
-      }
-    });
-  } catch { /* 继续 fallback */ }
-
-  // 3. fallback：Google s2 favicons 256px
+  // 2. fallback：Google s2 favicons 256px
   try {
     const source = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=256`;
     const response = await fetch(source, {
@@ -173,6 +157,22 @@ async function favicon(value, cors) {
       headers: {
         ...cors,
         'Content-Type': response.headers.get('Content-Type') || 'image/png',
+        'Cache-Control': 'public, max-age=604800'
+      }
+    });
+  } catch { /* 继续 fallback */ }
+
+  // 3. fallback：icon.horse 聚合源（覆盖比 Google 广，含国内站点）
+  try {
+    const horse = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
+      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
+    });
+    if (!horse.ok) throw new Error('icon.horse failed');
+    return new Response(horse.body, {
+      status: 200,
+      headers: {
+        ...cors,
+        'Content-Type': horse.headers.get('Content-Type') || 'image/png',
         'Cache-Control': 'public, max-age=604800'
       }
     });
