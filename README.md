@@ -15,11 +15,11 @@
 
 ## 核心功能演示
 
-### 🌗 深浅主题切换
+### ✨ AI 一键生成书签中文备注
 
-![主题切换](docs/demo/theme.gif)
+![AI 生成备注](docs/demo/ai.gif)
 
-*深色玻璃拟态 ↔ 暖米色浅色主题无缝切换，所有控件（顶部导航/按钮/分类栏/弹窗/表情选择器）自动同色系变化。*
+*打开任意书签的编辑弹窗，点「✨ 生成备注」自动生成中文简介，调用 Cloudflare Workers AI（免费）。*
 
 ### 📌 分类栏吸顶 + 滚动跟随高亮
 
@@ -177,7 +177,7 @@ CLOUDFLARE-DEPLOY.md  详细 Cloudflare 部署参考
 visitor.png           游客主页预览
 admin.png             管理员主页预览
 docs/demo/            README 演示 GIF
-  ├ theme.gif         深浅主题切换
+  ├ ai.gif            AI 一键生成书签中文备注
   └ scroll.gif        分类栏吸顶 + 滚动跟随高亮
 ```
 
