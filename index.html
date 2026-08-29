@@ -103,8 +103,8 @@
       <label>账号<input id="adminUser" required autocomplete="username" value="admin" readonly></label>
       <label>密码<span class="password-field"><input id="adminPassword" type="password" autocomplete="current-password" placeholder="未设置密码时可留空"><button class="password-toggle" type="button" data-password-target="adminPassword" aria-label="显示密码" aria-pressed="false">👁</button></span></label>
       <p class="form-error" id="adminError" hidden>账号或密码错误</p>
-      <label class="remember-row"><input type="checkbox" id="rememberLogin"><span>保持登录（关闭浏览器后仍保持登录状态）</span></label>
-      <p class="remember-hint">登录状态有效期 8 小时，过期后需重新登录；公用电脑请勿勾选</p>
+      <label class="remember-row"><input type="checkbox" id="rememberLogin"><span>记住密码（下次登录自动填入）</span></label>
+      <p class="remember-hint">⚠️ 密码以明文保存在本机浏览器，同一浏览器的人可查看；请勿在公用电脑勾选</p>
       <div class="modal-actions"><span></span><button class="ghost" type="button" id="adminCancel">取消</button><button class="primary" id="adminSubmitLabel" type="submit">登录</button></div>
     </form>
   </dialog>
@@ -165,6 +165,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=32"></script>
+  <script src="app.js?v=31"></script>
 </body>
 </html>
