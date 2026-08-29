@@ -169,7 +169,17 @@ async function favicon(value, cors) {
         headers: { ...cors, 'Content-Type': hct, 'Cache-Control': 'public, max-age=604800' }
       });
     }
-    return new Response(horse.body, {
+    // 灰字 PNG 占位识别：icon.horse 对无 favicon 站点返回 256px 首字母占位（内容简单、文件 < 4KB）
+    const hbuf = await horse.arrayBuffer();
+    if (hct.includes('png') && hbuf.byteLength < 4000) {
+      const b = new Uint8Array(hbuf);
+      if (b.length >= 24 && b[0] === 0x89 && b[1] === 0x50) {
+        const w = ((b[16] << 24) | (b[17] << 16) | (b[18] << 8) | b[19]) >>> 0;
+        const h = ((b[20] << 24) | (b[21] << 16) | (b[22] << 8) | b[23]) >>> 0;
+        if (w >= 200 && h >= 200) throw new Error('icon.horse gray placeholder');
+      }
+    }
+    return new Response(hbuf, {
       status: 200,
       headers: { ...cors, 'Content-Type': hct || 'image/png', 'Cache-Control': 'public, max-age=604800' }
     });
