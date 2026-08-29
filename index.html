@@ -7,7 +7,7 @@
   <title>Glide · 个人导航</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=84">
+  <link rel="stylesheet" href="styles.css?v=85">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
@@ -55,7 +55,7 @@
       <label>网址 <small>填写后自动补充图标</small><input id="siteUrl" required type="url" placeholder="https://apple.com"></label>
       <label>图标 <small>可填 emoji、图片网址，留空则显示首字母</small><input id="siteIcon" placeholder=" 或 https://…"></label>
       <label>详情备注 <small>鼠标悬停卡片时显示</small><input id="siteDetail" maxlength="100" placeholder="例如：工作常用账号、使用说明等"></label>
-      <div class="ai-gen-row admin-only"><button class="ai-gen-btn" type="button" id="aiGenerateDetail">✨ 生成备注</button></div>
+      <div class="ai-gen-row admin-only"><button class="ai-gen-btn" type="button" id="aiGenerateDetail">✨ 生成备注</button><button class="ai-gen-btn" type="button" id="aiGenerateIcon">🖼 更新图标</button></div>
       <div class="modal-actions"><button class="danger ghost" type="button" id="deleteSite" hidden>删除</button><span></span><button class="ghost" id="siteCancel" type="button">取消</button><button class="primary" type="submit">保存</button></div>
     </form>
   </dialog>
@@ -144,6 +144,7 @@
       <p class="form-error" id="aiError" hidden></p>
       <div class="ai-divider"></div>
       <div class="ai-batch-entry" id="aiBatchButton" role="button" tabindex="0"><span class="ic">✨</span><span><b>批量生成备注</b><small>为所有书签生成中文备注</small></span><span class="go">›</span></div>
+      <div class="ai-batch-entry" id="aiIconBatchButton" role="button" tabindex="0"><span class="ic">🖼</span><span><b>批量更新图标</b><small>为所有书签获取最高清图标</small></span><span class="go">›</span></div>
       <div class="modal-actions"><span></span><button class="ghost" type="button" id="aiCancel">取消</button><button class="primary" type="submit">保存</button></div>
     </form>
   </dialog>
@@ -165,6 +166,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=39"></script>
+  <script src="app.js?v=40"></script>
 </body>
 </html>
