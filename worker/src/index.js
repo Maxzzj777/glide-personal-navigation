@@ -121,6 +121,22 @@ export default {
   }
 };
 
+function looksLikeImage(buf, ct) {
+  if (!buf || buf.length === 0) return false;
+  if (ct && /image\//.test(ct)) return true;
+  const b = buf;
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return true; // PNG
+  if (b[0] === 0xff && b[1] === 0xd8) return true; // JPEG
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return true; // GIF
+  if (b[0] === 0x00 && b[1] === 0x00 && b[2] === 0x01 && b[3] === 0x00) return true; // ICO
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46) return true; // RIFF/WebP
+  if (b[0] === 0x3c) { // '<' 可能是 SVG/XML 或 HTML，需进一步区分
+    const head = new TextDecoder().decode(b.slice(0, 512)).toLowerCase();
+    if (head.includes('<svg') || head.includes('<?xml')) return true;
+  }
+  return false;
+}
+
 async function favicon(value, cors) {
   const domain = value.trim().toLowerCase().replace(/^www\./, '');
   if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(domain)) {
@@ -133,10 +149,14 @@ async function favicon(value, cors) {
     try {
       const icon = await fetch(hdUrl, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
       if (icon.ok) {
-        return new Response(icon.body, {
-          status: 200,
-          headers: { ...cors, 'Content-Type': icon.headers.get('Content-Type') || 'image/png', 'Cache-Control': 'public, max-age=604800' }
-        });
+        const ict = icon.headers.get('Content-Type') || '';
+        const ibuf = new Uint8Array(await icon.arrayBuffer());
+        if (looksLikeImage(ibuf, ict)) {
+          return new Response(ibuf, {
+            status: 200,
+            headers: { ...cors, 'Content-Type': ict || 'image/png', 'Cache-Control': 'public, max-age=604800' }
+          });
+        }
       }
     } catch { /* 继续 */ }
   }
@@ -246,8 +266,8 @@ async function fetchHDIcon(domain) {
       if (!r.ok) continue;
       const ct = r.headers.get('Content-Type') || '';
       const buf = new Uint8Array(await r.arrayBuffer());
-      // 必须是图片（SPA 路由兜底会返回 HTML，靠 magic bytes 跳过）
-      if (buf.length > 0 && (buf[0] === 0x89 || buf[0] === 0xff || buf[0] === 0x00 || buf[0] === 0x3c || buf[0] === 0x52 || /image|icon/.test(ct))) {
+      // 必须是图片（SPA 路由兜底会返回 HTML，靠 looksLikeImage 精确识别跳过）
+      if (looksLikeImage(buf, ct)) {
         return `${base}${p}`;
       }
     } catch { /* 下一个 */ }
