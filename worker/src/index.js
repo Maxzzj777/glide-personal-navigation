@@ -174,6 +174,26 @@ async function favicon(value, cors) {
     }
   } catch { /* 继续 */ }
 
+  // 2.5. 历史快照查询：favicon 文件在但首页声明缺失时（Vue/Vite 构建丢 <link rel="icon">），
+  // 从 Wayback Machine 找历史 favicon 路径（如 /assets/logo-xxx.ico），文件通常仍在服务器。
+  // 加 8 秒超时，CDX 慢就跳过，不阻塞主流程。
+  const wb = await findWaybackFavicon(domain);
+  if (wb) {
+    try {
+      const wicon = await fetch(wb, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+      if (wicon.ok) {
+        const wct = wicon.headers.get('Content-Type') || '';
+        const wbuf = new Uint8Array(await wicon.arrayBuffer());
+        if (looksLikeImage(wbuf, wct)) {
+          return new Response(wbuf, {
+            status: 200,
+            headers: { ...cors, 'Content-Type': wct || 'image/png', 'Cache-Control': 'public, max-age=604800' }
+          });
+        }
+      }
+    } catch { /* 继续 */ }
+  }
+
   // 3. icon.horse 兜底（覆盖国内站点，如文心一言）
   try {
     const horse = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
@@ -273,11 +293,6 @@ async function fetchHDIcon(domain) {
     } catch { /* 下一个 */ }
   }
 
-  // 历史快照查询：favicon 文件在但首页声明缺失时（Vue/Vite 构建丢 <link rel="icon">），
-  // 从 Wayback Machine 找历史 favicon 路径（如 /assets/logo-xxx.ico），文件通常仍在服务器
-  const wb = await findWaybackFavicon(domain);
-  if (wb) return wb;
-
   return null;
 }
 
@@ -285,8 +300,8 @@ async function findWaybackFavicon(domain) {
   const hosts = [domain, `www.${domain}`];
   for (const host of hosts) {
     try {
-      const cdx = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(host + '/*')}&output=json&limit=100&collapse=urlkey&fl=original`;
-      const r = await fetch(cdx, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+      const cdx = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(host + '/*')}&output=json&limit=30&collapse=urlkey&fl=original`;
+      const r = await fetch(cdx, { signal: AbortSignal.timeout(8000), cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
       if (!r.ok) continue;
       const data = await r.json();
       if (!Array.isArray(data) || data.length < 2) continue;
