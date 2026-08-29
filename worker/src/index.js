@@ -234,14 +234,64 @@ async function fetchHDIcon(domain) {
     if (best) return best;
   } catch { /* 首页抓取失败，走默认路径 */ }
 
-  // 默认路径兜底
-  const defaults = ['/apple-touch-icon.png', '/favicon.svg', '/favicon.png', '/favicon.ico'];
+  // 默认路径兜底（扩充：logo/icon 系列，覆盖常见命名）
+  const defaults = [
+    '/favicon.ico', '/favicon.svg', '/favicon.png', '/apple-touch-icon.png',
+    '/apple-touch-icon-precomposed.png', '/logo.png', '/logo.svg', '/logo.ico',
+    '/icon.png', '/icon.svg', '/icon.ico'
+  ];
   for (const p of defaults) {
     try {
       const r = await fetch(`${base}${p}`, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+      if (!r.ok) continue;
       const ct = r.headers.get('Content-Type') || '';
-      if (r.ok && /image|icon/.test(ct)) return `${base}${p}`;
+      const buf = new Uint8Array(await r.arrayBuffer());
+      // 必须是图片（SPA 路由兜底会返回 HTML，靠 magic bytes 跳过）
+      if (buf.length > 0 && (buf[0] === 0x89 || buf[0] === 0xff || buf[0] === 0x00 || buf[0] === 0x3c || buf[0] === 0x52 || /image|icon/.test(ct))) {
+        return `${base}${p}`;
+      }
     } catch { /* 下一个 */ }
+  }
+
+  // 历史快照查询：favicon 文件在但首页声明缺失时（Vue/Vite 构建丢 <link rel="icon">），
+  // 从 Wayback Machine 找历史 favicon 路径（如 /assets/logo-xxx.ico），文件通常仍在服务器
+  const wb = await findWaybackFavicon(domain);
+  if (wb) return wb;
+
+  return null;
+}
+
+async function findWaybackFavicon(domain) {
+  const hosts = [domain, `www.${domain}`];
+  for (const host of hosts) {
+    try {
+      const cdx = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(host + '/*')}&output=json&limit=100&collapse=urlkey&fl=original`;
+      const r = await fetch(cdx, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (!Array.isArray(data) || data.length < 2) continue;
+
+      let best = null, bestScore = -Infinity;
+      for (let i = 1; i < data.length; i++) {
+        const u = String(data[i] && data[i][0] || '');
+        const low = u.toLowerCase();
+        // 只取疑似图标（图片扩展名 + 路径关键词），排除页面大图/头像/横幅
+        if (!/\.(ico|png|svg|webp)(\?|$)/.test(low)) continue;
+        if (!/(favicon|logo|icon|apple[-_ ]?touch)/.test(low)) continue;
+        if (/avatar|photo|image|banner|background|thumbnail|preview|screenshot|cover/.test(low)) continue;
+
+        let s = 0;
+        if (/favicon/.test(low)) s += 100;
+        else if (/apple[-_ ]?touch/.test(low)) s += 90;
+        else if (/logo/.test(low)) s += 70;
+        else if (/icon/.test(low)) s += 60;
+        if (/\.svg/.test(low)) s += 20;
+        else if (/\.png/.test(low)) s += 15;
+        else if (/\.webp/.test(low)) s += 10;
+        if (s > bestScore) { bestScore = s; best = u; }
+      }
+      if (best) return best;
+    } catch { /* 下一 host */ }
   }
   return null;
 }
