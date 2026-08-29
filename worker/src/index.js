@@ -2,6 +2,14 @@ const DATA_KEY = 'navigation-state';
 const CREDENTIAL_KEY = 'admin-credential';
 const SESSION_PREFIX = 'admin-session:';
 const SESSION_TTL = 60 * 60 * 8;
+const LOGIN_FAIL_KEY = 'admin-login-fail';
+const LOGIN_LOCK_STEPS = [
+  { fails: 5, lock: 30 },
+  { fails: 6, lock: 300 },
+  { fails: 7, lock: 900 },
+  { fails: 8, lock: 1800 }
+];
+function humanizeLock(sec) { return sec < 60 ? `${sec} 秒` : `${Math.round(sec / 60)} 分钟`; }
 const ALLOWED_ORIGINS = new Set([
   'https://shuqian.kdns.fr',
   'http://localhost:8080',
@@ -27,9 +35,20 @@ export default {
 
       if (url.pathname === '/api/login' && request.method === 'POST') {
         const { user, password = '' } = await request.json();
-        if (user !== 'admin' || !(await verifyPassword(env, password))) {
-          return json({ error: '账号或密码错误' }, 401, cors);
+        const now = Math.floor(Date.now() / 1000);
+        const failRaw = await env.GLIDE_KV.get(LOGIN_FAIL_KEY);
+        const fail = failRaw ? JSON.parse(failRaw) : { count: 0, lockedUntil: 0 };
+        if (fail.lockedUntil > now) {
+          return json({ error: `尝试过于频繁，请 ${humanizeLock(fail.lockedUntil - now)}后再试` }, 429, cors);
         }
+        if (user !== 'admin' || !(await verifyPassword(env, password))) {
+          const count = (fail.count || 0) + 1;
+          let lockedUntil = 0;
+          for (const step of LOGIN_LOCK_STEPS) if (count >= step.fails) lockedUntil = now + step.lock;
+          await env.GLIDE_KV.put(LOGIN_FAIL_KEY, JSON.stringify({ count, lockedUntil }));
+          return json({ error: lockedUntil > now ? `账号或密码错误，已锁定 ${humanizeLock(lockedUntil - now)}` : '账号或密码错误' }, 401, cors);
+        }
+        await env.GLIDE_KV.delete(LOGIN_FAIL_KEY);
         const token = randomToken();
         await env.GLIDE_KV.put(SESSION_PREFIX + token, '1', { expirationTtl: SESSION_TTL });
         return json({ token, expiresIn: SESSION_TTL }, 200, cors);
