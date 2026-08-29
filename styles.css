@@ -105,8 +105,8 @@ body.admin-mode .ai-entry{display:grid}
 .ai-batch-entry b{font-size:13px;font-weight:700;color:var(--text)}
 .ai-batch-entry small{display:block;font-size:11px;color:var(--muted);margin-top:2px;font-weight:400}
 .ai-batch-entry .go{margin-left:auto;font-size:18px;color:#9db4ff;line-height:1}
-.ai-gen-row{margin:-4px 0 14px;display:flex;gap:8px}
-.ai-gen-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:0;border-radius:9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(89,124,255,.16);color:#9db4ff;border:1px solid rgba(89,124,255,.35);transition:background .18s}
+.ai-gen-row{margin:0 0 12px}
+.ai-gen-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:0;border-radius:9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(89,124,255,.16);color:#9db4ff;border:1px solid rgba(89,124,255,.35);transition:background .18s}
 .ai-gen-btn:hover{background:rgba(89,124,255,.28)}
 .ai-gen-btn:disabled{opacity:.6;cursor:default}
 .batch-desc{font-size:13px;color:var(--text);line-height:1.7;margin:0 0 4px}
