@@ -7,7 +7,7 @@
   <title>Glide · 个人导航</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=55">
+  <link rel="stylesheet" href="styles.css?v=57">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
@@ -51,6 +51,7 @@
       <div class="modal-head"><div><p class="eyebrow">QUICK EDIT</p><h2 id="siteDialogTitle">添加网站</h2></div><button class="icon-button" id="siteClose" type="button" aria-label="关闭新增收藏">×</button></div>
       <input type="hidden" id="siteId">
       <label>分类<select id="siteCategory"></select></label>
+      <label>所在小组 <small>分类内二级分组，可留空</small><select id="siteGroup"></select></label>
       <label>名称<input id="siteName" required maxlength="40" placeholder="例如：Apple"></label>
       <label>网址 <small>填写后自动补充图标</small><input id="siteUrl" required type="url" placeholder="https://apple.com"></label>
       <label>图标 <small>可填 emoji、图片网址，留空则显示首字母</small><input id="siteIcon" placeholder=" 或 https://…"></label>
@@ -93,6 +94,11 @@
         <button type="button" class="emoji-option" data-icon="📌">📌</button>
       </div>
       <input id="categoryIcon" maxlength="8" placeholder="或输入自定义图标（留空不显示）">
+      <div class="group-manager" id="groupManager" hidden>
+        <label>二级小组 <small>分类内分组展示，可增删</small></label>
+        <div id="groupList"></div>
+        <div class="group-add-row"><input id="newGroupName" maxlength="12" placeholder="新小组名称，如：社交通讯"><button type="button" id="addGroupBtn" aria-label="添加小组">＋</button></div>
+      </div>
       <div class="modal-actions"><button class="danger ghost" type="button" id="deleteCategory" hidden>删除</button><span></span><button class="ghost" id="categoryCancel" type="button">取消</button><button class="primary" type="submit">保存</button></div>
     </form>
   </dialog>
@@ -164,6 +170,6 @@
   <dialog class="toast" id="toast" role="status"></dialog>
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
-  <script src="app.js?v=28"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
