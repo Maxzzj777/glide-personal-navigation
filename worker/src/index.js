@@ -180,7 +180,7 @@ async function favicon(value, source, cors) {
     return json({ error: '图标域名无效' }, 400, cors);
   }
 
-  const sourceFns = { page: pageIcon, gstatic: gstaticIcon, wayback: waybackIcon, horse: horseIcon, simpleicon: simpleIcon };
+  const sourceFns = { page: pageIcon, gstatic: gstaticIcon, wayback: waybackIcon, horse: horseIcon };
   if (sourceFns[source]) {
     const img = await sourceFns[source](domain);
     return img ? renderFavicon(img, cors) : letterSvg(domain, cors);
@@ -267,51 +267,6 @@ async function horseIcon(domain) {
   } catch { return null; }
 }
 
-const SIMPLE_ICON_SLUGS = {
-  'github.com': 'github',
-  'google.com': 'google',
-  'gmail.com': 'gmail',
-  'mail.google.com': 'gmail',
-  'youtube.com': 'youtube',
-  'telegram.org': 'telegram',
-  'bilibili.com': 'bilibili',
-  'weixin.qq.com': 'wechat',
-  'wechat.com': 'wechat',
-  'tiktok.com': 'tiktok',
-  'x.com': 'x',
-  'twitter.com': 'x',
-  'facebook.com': 'facebook',
-  'instagram.com': 'instagram',
-  'netflix.com': 'netflix',
-  'spotify.com': 'spotify',
-  'apple.com': 'apple',
-  'microsoft.com': 'microsoft',
-  'amazon.com': 'amazon',
-  'reddit.com': 'reddit',
-  'discord.com': 'discord',
-  'notion.so': 'notion',
-  'cloudflare.com': 'cloudflare',
-  'perplexity.ai': 'perplexity',
-  'anthropic.com': 'anthropic',
-  'claude.ai': 'claude',
-  'deepseek.com': 'deepseek',
-  'chat.deepseek.com': 'deepseek'
-};
-
-async function simpleIcon(domain) {
-  const slug = SIMPLE_ICON_SLUGS[domain];
-  if (!slug) return null;
-  try {
-    const r = await fetch(`https://cdn.simpleicons.org/${slug}`, {
-      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 30 }
-    });
-    if (!r.ok) return null;
-    const ct = r.headers.get('Content-Type') || 'image/svg+xml';
-    const body = new Uint8Array(await r.arrayBuffer());
-    return { body, ct };
-  } catch { return null; }
-}
-
 async function faviconCandidates(value, cors) {
   const domain = value.trim().toLowerCase().replace(/^www\./, '');
   if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(domain)) {
@@ -322,8 +277,7 @@ async function faviconCandidates(value, cors) {
     { key: 'page', label: '官网', fn: pageIcon },
     { key: 'gstatic', label: 'Google', fn: gstaticIcon },
     { key: 'wayback', label: '历史快照', fn: waybackIcon },
-    { key: 'horse', label: '聚合源', fn: horseIcon },
-    { key: 'simpleicon', label: '矢量库', fn: simpleIcon }
+    { key: 'horse', label: '聚合源', fn: horseIcon }
   ];
 
   const results = await Promise.all(sources.map(async (s) => {
@@ -333,7 +287,7 @@ async function faviconCandidates(value, cors) {
     return {
       url: `/api/favicon?domain=${encodeURIComponent(domain)}&source=${s.key}`,
       source: s.label,
-      size: s.key === 'simpleicon' ? '矢量' : (dim ? `${dim.w}×${dim.h}` : '')
+      size: dim ? `${dim.w}×${dim.h}` : ''
     };
   }));
 
