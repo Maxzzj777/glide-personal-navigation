@@ -80,7 +80,11 @@ function updateBackgroundPreview(){const url=$('#backgroundUrl').value.trim(),pr
 // ===== 备注生成（AI 生成中文描述） =====
 $('#aiGenerateDetail').onclick=async()=>{const name=$('#siteName').value.trim();const url=$('#siteUrl').value.trim();if(!name||!/^https?:\/\//i.test(url)){toast('请先填写名称和网址');return}const btn=$('#aiGenerateDetail');btn.disabled=true;btn.textContent='⏳ 生成中…';try{const result=await api('/api/remark',{method:'POST',body:JSON.stringify({url,name})});$('#siteDetail').value=result.text||'';toast('备注已生成')}catch(error){toast(error.message)}finally{btn.disabled=false;btn.textContent='✨ 生成备注'}};
 // ===== 单个更新图标（后端多源选最高清） =====
-$('#aiGenerateIcon').onclick=()=>{const url=$('#siteUrl').value.trim();if(!/^https?:\/\//i.test(url)){toast('请先填写网址');return}const domain=host(url);const v=Date.now();$('#siteIcon').value=`/api/favicon?domain=${encodeURIComponent(domain)}&hd=1&v=${v}`;toast('已获取最高清图标，保存后生效')};
+$('#aiGenerateIcon').onclick=()=>{const url=$('#siteUrl').value.trim();if(!/^https?:\/\//i.test(url)){toast('请先填写网址');return}const domain=host(url);const grid=$('#iconCandidatesGrid');grid.innerHTML='<div class="ic-loading">正在获取候选图标…</div>';$('#iconCandidatesDialog').showModal();api(`/api/favicon/candidates?domain=${encodeURIComponent(domain)}`).then(r=>{const cands=r.candidates||[];if(!cands.length){grid.innerHTML='<div class="ic-loading">未找到可用图标，可手动填写</div>';return}grid.innerHTML=cands.map(c=>`<button class="icon-candidate" type="button" data-url="${escapeHtml(c.url)}" data-source="${escapeHtml(c.source)}"><img src="${escapeHtml(c.url)}" alt="" loading="lazy"><span class="ic-src">${escapeHtml(c.source)}</span>${c.size?`<span class="ic-size">${escapeHtml(c.size)}</span>`:''}</button>`).join('')}).catch(e=>{grid.innerHTML=`<div class="ic-loading">获取失败：${escapeHtml(e.message)}</div>`})};
+// ===== 候选图标选择弹窗事件 =====
+$('#iconCandidatesGrid').addEventListener('click',e=>{const btn=e.target.closest('.icon-candidate');if(!btn)return;$('#siteIcon').value=btn.dataset.url;$('#iconCandidatesDialog').close();toast('已选择 '+btn.dataset.source+' 图标，保存后生效')});
+$('#iconCandidatesClose').onclick=()=>$('#iconCandidatesDialog').close();
+$('#iconCandidatesCancel').onclick=()=>$('#iconCandidatesDialog').close();
 
 // ===== AI 设置 =====
 function toggleAIFields(){const p=$('#aiProvider').value;$('#aiKeyField').hidden=p==='workers-ai';$('#aiBaseUrlField').hidden=p!=='openai';$('#aiModel').placeholder=p==='workers-ai'?'默认 mistral-small（可留空）':p==='openai'?'如 gpt-3.5-turbo':'如 gemini-1.5-flash'}
