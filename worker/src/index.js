@@ -25,7 +25,11 @@ export default {
     try {
       const url = new URL(request.url);
       if (url.pathname === '/api/favicon' && request.method === 'GET') {
-        return favicon(url.searchParams.get('domain') || '', cors);
+        return favicon(url.searchParams.get('domain') || '', url.searchParams.get('source') || 'auto', cors);
+      }
+
+      if (url.pathname === '/api/favicon/candidates' && request.method === 'GET') {
+        return faviconCandidates(url.searchParams.get('domain') || '', cors);
       }
 
       if (url.pathname === '/api/state' && request.method === 'GET') {
@@ -170,101 +174,124 @@ function imageSize(buf) {
   return null;
 }
 
-async function favicon(value, cors) {
+async function favicon(value, source, cors) {
   const domain = value.trim().toLowerCase().replace(/^www\./, '');
   if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(domain)) {
     return json({ error: '图标域名无效' }, 400, cors);
   }
 
-  // 1. 抓网站 HTML，解析高清图标（apple-touch-icon 优先）
-  const hdUrl = await fetchHDIcon(domain);
-  if (hdUrl) {
-    try {
-      const icon = await fetch(hdUrl, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
-      if (icon.ok) {
-        const ict = icon.headers.get('Content-Type') || '';
-        const ibuf = new Uint8Array(await icon.arrayBuffer());
-        if (looksLikeImage(ibuf, ict)) {
-          return new Response(ibuf, {
-            status: 200,
-            headers: { ...cors, 'Content-Type': ict || 'image/png', 'Cache-Control': 'public, max-age=604800' }
-          });
-        }
-      }
-    } catch { /* 继续 */ }
+  const sourceFns = { page: pageIcon, gstatic: gstaticIcon, wayback: waybackIcon, horse: horseIcon };
+  if (sourceFns[source]) {
+    const img = await sourceFns[source](domain);
+    return img ? renderFavicon(img, cors) : letterSvg(domain, cors);
   }
 
-  // 2. Google gstatic faviconV2（Google 搜索缓存，跳过反爬 + 高清）
-  try {
-    const g = await fetch(`https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(`https://${domain}`)}&size=256`, {
-      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
-    });
-    if (g.ok) {
-      return new Response(g.body, {
-        status: 200,
-        headers: { ...cors, 'Content-Type': g.headers.get('Content-Type') || 'image/png', 'Cache-Control': 'public, max-age=604800' }
-      });
-    }
-  } catch { /* 继续 */ }
-
-  // 2.5. 历史快照查询：favicon 文件在但首页声明缺失时（Vue/Vite 构建丢 <link rel="icon">），
-  // 从 Wayback Machine 找历史 favicon 路径（如 /assets/logo-xxx.ico），文件通常仍在服务器。
-  // 加 8 秒超时，CDX 慢就跳过，不阻塞主流程。
-  const wb = await findWaybackFavicon(domain);
-  if (wb) {
-    try {
-      const wicon = await fetch(wb, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
-      if (wicon.ok) {
-        const wct = wicon.headers.get('Content-Type') || '';
-        const wbuf = new Uint8Array(await wicon.arrayBuffer());
-        if (looksLikeImage(wbuf, wct)) {
-          return new Response(wbuf, {
-            status: 200,
-            headers: { ...cors, 'Content-Type': wct || 'image/png', 'Cache-Control': 'public, max-age=604800' }
-          });
-        }
-      }
-    } catch { /* 继续 */ }
+  // auto：顺序取第一个成功
+  for (const fn of [pageIcon, gstaticIcon, waybackIcon, horseIcon]) {
+    const img = await fn(domain);
+    if (img) return renderFavicon(img, cors);
   }
+  return letterSvg(domain, cors);
+}
 
-  // 3. icon.horse 兜底（覆盖国内站点，如文心一言）
-  try {
-    const horse = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
-      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
-    });
-    if (!horse.ok) throw new Error('icon.horse failed');
-    const hct = horse.headers.get('Content-Type') || '';
-    if (hct.includes('svg')) {
-      const hsvg = await horse.text();
-      if (hsvg.includes('#4F46E5') || hsvg.includes('#7C3AED')) throw new Error('icon.horse placeholder');
-      return new Response(hsvg, {
-        status: 200,
-        headers: { ...cors, 'Content-Type': hct, 'Cache-Control': 'public, max-age=604800' }
-      });
-    }
-    // 灰字 PNG 占位识别：icon.horse 对无 favicon 站点返回 256px 首字母占位（内容简单、文件 < 4KB）
-    const hbuf = await horse.arrayBuffer();
-    if (hct.includes('png') && hbuf.byteLength < 4000) {
-      const b = new Uint8Array(hbuf);
-      if (b.length >= 24 && b[0] === 0x89 && b[1] === 0x50) {
-        const w = ((b[16] << 24) | (b[17] << 16) | (b[18] << 8) | b[19]) >>> 0;
-        const h = ((b[20] << 24) | (b[21] << 16) | (b[22] << 8) | b[23]) >>> 0;
-        if (w >= 200 && h >= 200) throw new Error('icon.horse gray placeholder');
-      }
-    }
-    return new Response(hbuf, {
-      status: 200,
-      headers: { ...cors, 'Content-Type': hct || 'image/png', 'Cache-Control': 'public, max-age=604800' }
-    });
-  } catch { /* 继续 */ }
+function renderFavicon(img, cors) {
+  return new Response(img.body, {
+    status: 200,
+    headers: { ...cors, 'Content-Type': img.ct || 'image/png', 'Cache-Control': 'public, max-age=604800' }
+  });
+}
 
-  // 4. 首字母 SVG 兜底
+function letterSvg(domain, cors) {
   const letter = domain[0].toUpperCase();
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#5f6066"/><text x="64" y="80" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Arial" font-size="58" font-weight="700" fill="white">${letter}</text></svg>`;
   return new Response(svg, {
     status: 200,
     headers: { ...cors, 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }
   });
+}
+
+async function pageIcon(domain) {
+  const url = await fetchHDIcon(domain);
+  if (!url) return null;
+  try {
+    const r = await fetch(url, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+    if (!r.ok) return null;
+    const ct = r.headers.get('Content-Type') || '';
+    const body = new Uint8Array(await r.arrayBuffer());
+    return looksLikeImage(body, ct) ? { body, ct } : null;
+  } catch { return null; }
+}
+
+async function gstaticIcon(domain) {
+  try {
+    const r = await fetch(`https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(`https://${domain}`)}&size=256`, {
+      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
+    });
+    if (!r.ok) return null;
+    const ct = r.headers.get('Content-Type') || '';
+    const body = new Uint8Array(await r.arrayBuffer());
+    return looksLikeImage(body, ct) ? { body, ct } : null;
+  } catch { return null; }
+}
+
+async function waybackIcon(domain) {
+  const url = await findWaybackFavicon(domain);
+  if (!url) return null;
+  try {
+    const r = await fetch(url, { cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 } });
+    if (!r.ok) return null;
+    const ct = r.headers.get('Content-Type') || '';
+    const body = new Uint8Array(await r.arrayBuffer());
+    return looksLikeImage(body, ct) ? { body, ct } : null;
+  } catch { return null; }
+}
+
+async function horseIcon(domain) {
+  try {
+    const r = await fetch(`https://icon.horse/icon/${encodeURIComponent(domain)}`, {
+      cf: { cacheEverything: true, cacheTtl: 60 * 60 * 24 * 7 }
+    });
+    if (!r.ok) return null;
+    const ct = r.headers.get('Content-Type') || '';
+    const body = new Uint8Array(await r.arrayBuffer());
+    if (ct.includes('svg')) {
+      const s = new TextDecoder().decode(body);
+      if (s.includes('#4F46E5') || s.includes('#7C3AED')) return null;
+      return { body, ct };
+    }
+    if (ct.includes('png') && body.byteLength < 4000) {
+      const dim = imageSize(body);
+      if (dim && dim.w >= 200 && dim.h >= 200) return null;
+    }
+    return { body, ct };
+  } catch { return null; }
+}
+
+async function faviconCandidates(value, cors) {
+  const domain = value.trim().toLowerCase().replace(/^www\./, '');
+  if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(domain)) {
+    return json({ error: '图标域名无效' }, 400, cors);
+  }
+
+  const sources = [
+    { key: 'page', label: '官网', fn: pageIcon },
+    { key: 'gstatic', label: 'Google', fn: gstaticIcon },
+    { key: 'wayback', label: '历史快照', fn: waybackIcon },
+    { key: 'horse', label: '聚合源', fn: horseIcon }
+  ];
+
+  const results = await Promise.all(sources.map(async (s) => {
+    const img = await s.fn(domain);
+    if (!img) return null;
+    const dim = imageSize(img.body);
+    return {
+      url: `/api/favicon?domain=${encodeURIComponent(domain)}&source=${s.key}`,
+      source: s.label,
+      size: dim ? `${dim.w}×${dim.h}` : ''
+    };
+  }));
+
+  return json({ candidates: results.filter(Boolean) }, 200, cors);
 }
 
 async function fetchHDIcon(domain) {
