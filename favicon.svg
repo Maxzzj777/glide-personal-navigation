@@ -4,8 +4,12 @@
       <stop offset="0" stop-color="#597cff"/>
       <stop offset="1" stop-color="#8b65ef"/>
     </linearGradient>
+    <style>
+      .b { fill: #1c1c1e; }
+      @media (prefers-color-scheme: light) { .b { fill: #ffffff; } }
+    </style>
   </defs>
-  <rect width="64" height="64" fill="#1c1c1e"/>
+  <rect class="b" width="64" height="64"/>
   <rect x="3" y="3" width="58" height="58" rx="13" fill="url(#g)"/>
   <text x="32" y="44" text-anchor="middle" font-family="-apple-system, Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">G</text>
 </svg>
