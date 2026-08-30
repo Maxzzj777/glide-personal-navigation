@@ -7,7 +7,7 @@
   <title>Glide · 个人导航</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=86">
+  <link rel="stylesheet" href="styles.css?v=87">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
@@ -59,6 +59,13 @@
       <div class="ai-gen-row admin-only"><button class="ai-gen-btn" type="button" id="aiGenerateDetail">✨ 生成备注</button></div>
       <div class="modal-actions"><button class="danger ghost" type="button" id="deleteSite" hidden>删除</button><span></span><button class="ghost" id="siteCancel" type="button">取消</button><button class="primary" type="submit">保存</button></div>
     </form>
+  </dialog>
+
+  <dialog id="iconCandidatesDialog" class="modal glass small-modal">
+    <div class="modal-head"><div><p class="eyebrow">ICON PICKER</p><h2>选择图标</h2></div><button class="icon-button" id="iconCandidatesClose" type="button" aria-label="关闭">×</button></div>
+    <p class="ic-hint">从以下来源挑一个最清晰的图标，点选后填入图标栏</p>
+    <div class="ic-grid" id="iconCandidatesGrid"></div>
+    <div class="modal-actions"><button class="ghost" id="iconCandidatesCancel" type="button">取消</button></div>
   </dialog>
 
   <dialog id="categoryDialog" class="modal glass small-modal">
@@ -167,6 +174,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=41"></script>
+  <script src="app.js?v=42"></script>
 </body>
 </html>
