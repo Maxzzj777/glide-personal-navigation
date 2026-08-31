@@ -71,6 +71,13 @@
     <div class="modal-actions"><button class="ghost" id="iconCandidatesCancel" type="button">取消</button></div>
   </dialog>
 
+  <dialog id="iconBatchDialog" class="modal glass small-modal">
+    <div class="modal-head"><div><p class="eyebrow">BATCH</p><h2>批量更新图标</h2></div><button class="icon-button" id="iconBatchClose" type="button" aria-label="关闭批量更新图标">×</button></div>
+    <p class="batch-desc">将为可自动更新的书签刷新图标；<b>不会覆盖手动指定的图标</b>。</p>
+    <div class="batch-list"><div>书签总数 <b id="iconBatchTotal">0 个</b></div><div>提示 <b>更新后会保存到云端</b></div></div>
+    <div class="modal-actions"><span></span><button class="ghost" id="iconBatchCancel" type="button">取消</button><button class="primary" id="iconBatchStart" type="button">开始更新</button></div>
+  </dialog>
+
   <dialog id="categoryDialog" class="modal glass small-modal">
     <form id="categoryForm" method="dialog">
       <div class="modal-head"><h2 id="categoryDialogTitle">新建分类</h2><button class="icon-button" id="categoryClose" type="button" aria-label="关闭新建分组">×</button></div>
@@ -164,6 +171,7 @@
   <dialog id="linkCheckDialog" class="modal glass small-modal">
     <div class="modal-head"><div><p class="eyebrow">LINK CHECK</p><h2>检查失效链接</h2></div><button class="icon-button" id="linkCheckClose" type="button" aria-label="关闭失效链接检查">×</button></div>
     <p class="link-check-summary" id="linkCheckSummary"></p>
+    <div class="batch-list"><div>书签总数 <b id="linkCheckTotal">0 个</b></div><div>提示 <b>仅检查可访问性，不会修改书签</b></div></div>
     <p class="batch-progress" id="linkCheckProgress" hidden></p>
     <div class="link-check-results" id="linkCheckResults"></div>
     <div class="modal-actions"><span></span><button class="ghost" id="linkCheckCancel" type="button">取消</button><button class="primary" id="linkCheckStart" type="button">开始检查</button></div>
@@ -186,6 +194,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=45"></script>
+  <script src="app.js?v=46"></script>
 </body>
 </html>
