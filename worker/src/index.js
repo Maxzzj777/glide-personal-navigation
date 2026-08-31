@@ -475,8 +475,15 @@ async function checkLink(value) {
   try {
     let response = await fetch(url, { method: 'HEAD', redirect: 'follow', signal: controller.signal });
     if (!response.ok) response = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' }, redirect: 'follow', signal: controller.signal });
-    return { ok: response.ok, status: response.status };
-  } catch { return { ok: false, error: '无法访问或检查超时' }; } finally { clearTimeout(timeout); }
+    return { ok: response.ok, status: response.status, state: linkCheckState(response.status) };
+  } catch { return { ok: false, error: '无法访问或检查超时', state: 'temporary' }; } finally { clearTimeout(timeout); }
+}
+
+export function linkCheckState(status) {
+  if (status >= 200 && status < 300) return 'accessible';
+  if (status === 401 || status === 403) return 'restricted';
+  if (status === 429 || status >= 500) return 'temporary';
+  return 'broken';
 }
 
 function privateHost(hostname) {
