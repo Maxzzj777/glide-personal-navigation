@@ -76,6 +76,8 @@
 
 点本仓库右上角的 **Fork** 按钮，复制到你自己的 GitHub 账号下。
 
+> **重要：Fork 后不会连接原作者的 Cloudflare。** 原仓库中的 KV ID 和域名只是配置值，不是访问密钥；你必须换成自己 Cloudflare 账号下的 KV 和域名。没有原作者的 Cloudflare 账号或 API Token，就无法读写原站数据。API Token 才是密钥，绝对不要写进仓库、Issue 或教程截图。
+
 ### 2. 发布前端（GitHub Pages）
 
 1. 进入你 fork 的仓库 → **Settings → Pages**
@@ -84,7 +86,12 @@
 
 > 形如 `https://你的用户名.github.io/glide-personal-navigation/`
 
-想用自己的域名？在仓库根目录的 `CNAME` 文件里写你的域名，然后把域名 DNS 指到 GitHub Pages 即可。
+接着处理仓库根目录的 `CNAME` 文件（二选一，不能跳过）：
+
+- 使用上面的 `github.io` 地址：**删除 `CNAME` 文件**
+- 使用自己的域名：把 `CNAME` 内容改成自己的完整域名，例如 `nav.example.com`
+
+> 不要保留原仓库的 `shuqian.kdns.fr`，否则 GitHub Pages 会尝试使用原作者的域名。
 
 ### 3. 创建 Cloudflare KV
 
@@ -94,7 +101,7 @@
 
 ### 4. 修改 Worker 配置
 
-在你 fork 的仓库里，编辑 `worker/wrangler.jsonc`，把 `kv_namespaces` 里的 `id` 改成你刚才复制的 KV ID：
+在你 fork 的仓库里，编辑 `worker/wrangler.jsonc`。**必须替换原来的 KV ID**，把 `kv_namespaces` 里的 `id` 改成你刚才复制的 KV ID：
 
 ```jsonc
 {
@@ -104,8 +111,15 @@
 }
 ```
 
-- 如果你用自己的域名且 Worker 路由在该域名下：保留 `routes` 配置并改成你的域名
-- 如果你想用 Cloudflare 提供的免费 `*.workers.dev` 域名：**删掉整个 `routes` 数组**
+- 如果你用自己的域名：保留 `routes`，把 `pattern` 改成 `你的完整域名/api/*`，把 `zone_name` 改成 Cloudflare 中的根域名。例如网站是 `nav.example.com`，则 `zone_name` 是 `example.com`
+- 如果你使用 Cloudflare 提供的免费 `*.workers.dev` 域名：**删掉整个 `routes` 数组**
+
+然后编辑 `worker/src/index.js`，搜索 `https://shuqian.kdns.fr`，把找到的两处都改成你网站的来源：
+
+- 自定义域名示例：`https://nav.example.com`
+- GitHub Pages 示例：`https://你的用户名.github.io`（不要带 `/glide-personal-navigation/` 路径）
+
+> 原仓库里的 KV ID、`shuqian.kdns.fr` 和路由都不能原样保留。即使忘记修改，别人的 Cloudflare 账号也无权部署到原作者的 KV 或域名，通常只会导致自己的部署失败，不会影响原站。
 
 ### 5. 部署 Worker（推荐用 Cloudflare Git 集成，零本地）
 
@@ -116,16 +130,19 @@
    - **Build command** 留空
    - **Deploy command** 填 `npx wrangler deploy`
 4. 点 **Save and Deploy**，等 1-2 分钟完成首次部署
-5. （强烈建议）让 AI 备注功能可用：到 Worker → Settings → **Bindings** → **Variable** 添加绑定，Variable name 填 `AI`，类型选 **AI**，保存。这步给 Worker 接上 Cloudflare 的 Workers AI 服务，AI 生成备注就能免费用了
+5. 部署成功后打开 Worker 的设置，确认 Bindings 中同时有 `GLIDE_KV` 和 `AI`。这两个绑定已写在 `wrangler.jsonc` 中，正常部署后会自动出现
 
 ### 6. 让前端连到 Worker
 
 - **如果你用自己的域名**（Worker 路由也在该域名下，推荐）：**不用改任何东西**，前端自动同域请求 `/api/*`
-- **如果你用 workers.dev 免费域名**：编辑 `app.js` 第一行，把空字符串改成你的 Worker 地址：
-  ```js
-  const API_URL='https://glide-navigation-api.你的子域名.workers.dev';
-  ```
-  （注意保留引号；commit 后 GitHub Pages 自动重新部署）
+- **如果你用 workers.dev 免费域名**：
+  1. 编辑 `app.js` 第一行，把空字符串改成你的 Worker 地址：
+     ```js
+     const API_URL='https://glide-navigation-api.你的子域名.workers.dev';
+     ```
+  2. 提交后等待 GitHub Pages 和 Worker 都重新部署
+
+> 第 4 步修改 `worker/src/index.js` 是跨域许可。漏改时网页能打开，但登录、保存和读取云端数据会失败。
 
 ### 7. 首次登录
 
@@ -181,15 +198,27 @@ docs/demo/            README 演示 GIF
   └ scroll.gif        分类栏吸顶 + 滚动跟随高亮
 ```
 
-## Fork 隔离
+## Fork 隔离与部署前检查
 
-Fork 只会复制代码，不会复制：
+Fork 会复制仓库中的代码、界面和内置初始分类，但不会复制或同步：
 
-- ❌ 原站的 Cloudflare KV（你用自己的 KV，从零开始）
-- ❌ 原站的管理员密码（你自己重新设置）
-- ❌ 原站的书签数据（首次访问时 KV 是空的，只有一个默认「常用推荐」分类）
+- ❌ 原站 Cloudflare KV 中的实时书签、背景和 AI 配置
+- ❌ 原站的管理员密码和登录会话
+- ❌ 原作者 Cloudflare 账号、域名控制权或 API Token
 
-第一次部署后你的站是空的，往里面加书签就行。
+每个部署使用自己的 Worker、KV、域名和管理员密码。除非原作者主动把 Cloudflare 账号/API Token 或仓库写入权限交给别人，否则其他 Fork 无法影响原站。
+
+首次发布前逐项确认：
+
+- [ ] `CNAME` 已删除，或已改成自己的域名
+- [ ] `worker/wrangler.jsonc` 的 KV ID 已换成自己的
+- [ ] 自定义域名模式：`routes` 的 `pattern` 和 `zone_name` 已换成自己的
+- [ ] workers.dev 模式：已删除 `routes`，并修改 `app.js` 和 `worker/src/index.js` 的跨域配置
+- [ ] `CNAME`、`worker/wrangler.jsonc` 和 `worker/src/index.js` 中已不再使用原站域名或原 KV ID（教程文字里的示例不算）
+- [ ] Cloudflare 部署日志显示成功，Worker 中能看到 `GLIDE_KV` 和 `AI`
+- [ ] 打开网站后可以空密码登录，并已立即设置新密码
+
+如果登录或保存失败，先检查浏览器开发者工具的 Network：`/api/state` 返回 404 通常是路由未生效；出现 CORS 错误通常是 workers.dev 模式下漏改了 `ALLOWED_ORIGINS`。
 
 ---
 
