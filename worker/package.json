@@ -2,7 +2,8 @@
   "name": "glide-navigation-api",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test": "node src/link-check.test.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.33.1"

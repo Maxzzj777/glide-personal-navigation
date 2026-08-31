@@ -10,7 +10,7 @@
   <link rel="mask-icon" href="favicon-mask.svg" color="#597cff">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=19">
   <link rel="manifest" href="site.webmanifest?v=19">
-  <link rel="stylesheet" href="styles.css?v=89">
+  <link rel="stylesheet" href="styles.css?v=90">
 </head>
 <body>
   <div class="aurora" aria-hidden="true"><i></i><i></i></div>
@@ -156,8 +156,17 @@
       <div class="ai-divider"></div>
       <div class="ai-batch-entry" id="aiBatchButton" role="button" tabindex="0"><span class="ic">✨</span><span><b>批量生成备注</b><small>为所有书签生成中文备注</small></span><span class="go">›</span></div>
       <div class="ai-batch-entry" id="aiIconBatchButton" role="button" tabindex="0"><span class="ic">🖼</span><span><b>批量更新图标</b><small>为所有书签获取最高清图标</small></span><span class="go">›</span></div>
+      <button class="ai-batch-entry" id="linkCheckButton" type="button"><span class="ic">🔗</span><span><b>检查失效链接</b><small>检查书签是否仍可访问</small></span><span class="go">›</span></button>
       <div class="modal-actions"><span></span><button class="ghost" type="button" id="aiCancel">取消</button><button class="primary" type="submit">保存</button></div>
     </form>
+  </dialog>
+
+  <dialog id="linkCheckDialog" class="modal glass small-modal">
+    <div class="modal-head"><div><p class="eyebrow">LINK CHECK</p><h2>检查失效链接</h2></div><button class="icon-button" id="linkCheckClose" type="button" aria-label="关闭失效链接检查">×</button></div>
+    <p class="link-check-summary" id="linkCheckSummary"></p>
+    <p class="batch-progress" id="linkCheckProgress" hidden></p>
+    <div class="link-check-results" id="linkCheckResults"></div>
+    <div class="modal-actions"><span></span><button class="ghost" id="linkCheckCancel" type="button">取消</button><button class="primary" id="linkCheckStart" type="button">开始检查</button></div>
   </dialog>
 
   <dialog id="batchDialog" class="modal glass small-modal">
@@ -177,6 +186,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=44"></script>
+  <script src="app.js?v=45"></script>
 </body>
 </html>

@@ -80,6 +80,12 @@ export default {
         return json({ ok: true }, 200, cors);
       }
 
+      if (url.pathname === '/api/link-check' && request.method === 'POST') {
+        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
+        const { url: siteUrl = '' } = await request.json();
+        return json(await checkLink(siteUrl), 200, cors);
+      }
+
       if (url.pathname === '/api/remark' && request.method === 'POST') {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
         try {
@@ -459,6 +465,25 @@ function json(value, status, headers) {
     status,
     headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' }
   });
+}
+
+async function checkLink(value) {
+  let url;
+  try { url = new URL(value); } catch { return { ok: false, error: '网址无效' }; }
+  if (!/^https?:$/.test(url.protocol) || privateHost(url.hostname)) return { ok: false, error: '已跳过本机或局域网地址' };
+  const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    let response = await fetch(url, { method: 'HEAD', redirect: 'follow', signal: controller.signal });
+    if (!response.ok) response = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' }, redirect: 'follow', signal: controller.signal });
+    return { ok: response.ok, status: response.status };
+  } catch { return { ok: false, error: '无法访问或检查超时' }; } finally { clearTimeout(timeout); }
+}
+
+function privateHost(hostname) {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.local') || host === '::1' || /^f[cd]|^fe80:/i.test(host)) return true;
+  const parts = host.split('.').map(Number);
+  return parts.length === 4 && parts.every(Number.isInteger) && (parts[0] === 0 || parts[0] === 10 || parts[0] === 127 || parts[0] === 192 && parts[1] === 168 || parts[0] === 169 && parts[1] === 254 || parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31);
 }
 
 async function authorized(request, env) {

@@ -239,3 +239,6 @@ body:not(.admin-mode) .cat-edit,body:not(.admin-mode) .site-card .edit{display:n
 .ic-src{font-size:12px;font-weight:650;color:var(--text)}
 .ic-size{font-size:11px;color:var(--muted);margin-top:-4px}
 .ic-loading{width:100%;text-align:center;padding:28px 0;font-size:13px;color:var(--muted)}
+
+/* 分类按钮分离，拖拽仍由外层 .category 承担。 */
+.category{padding:0!important}.category-select{display:flex;align-items:center;gap:6px;width:100%;min-height:38px;padding:9px 34px 9px 12px;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;text-align:left;cursor:pointer}.ai-batch-entry{width:100%;font:inherit;color:inherit;text-align:left}.link-check-summary{font-size:13px;line-height:1.7;color:var(--muted);margin:0 0 12px}.link-check-results{display:grid;gap:8px;max-height:300px;overflow:auto}.link-check-result{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;color:var(--text);text-decoration:none}.link-check-result:hover{border-color:var(--accent)}.link-check-result span,.link-check-ok{font-size:12px;color:var(--muted)}.link-check-ok{margin:0;padding:10px 0}
