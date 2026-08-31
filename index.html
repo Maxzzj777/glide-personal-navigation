@@ -163,7 +163,7 @@
       <label id="aiBaseUrlField" hidden>API 地址<input id="aiBaseUrl" type="text" placeholder="如 https://api.deepseek.com/v1" autocomplete="off"></label>
       <p class="form-error" id="aiError" hidden></p>
       <div class="ai-divider"></div>
-      <div class="ai-batch-entry" id="aiBatchButton" role="button" tabindex="0"><span class="ic">✨</span><span><b>批量生成备注</b><small>为所有书签生成中文备注</small></span><span class="go">›</span></div>
+      <div class="ai-batch-entry" id="aiBatchButton" role="button" tabindex="0"><span class="ic">✨</span><span><b>批量生成备注</b><small>仅为没有备注的书签生成中文备注</small></span><span class="go">›</span></div>
       <div class="ai-batch-entry" id="aiIconBatchButton" role="button" tabindex="0"><span class="ic">🖼</span><span><b>批量更新图标</b><small>为所有书签获取最高清图标</small></span><span class="go">›</span></div>
       <button class="ai-batch-entry" id="linkCheckButton" type="button"><span class="ic">🔗</span><span><b>检查失效链接</b><small>检查书签是否仍可访问</small></span><span class="go">›</span></button>
       <div class="modal-actions"><span></span><button class="ghost" type="button" id="aiCancel">取消</button><button class="primary" type="submit">保存</button></div>
@@ -184,9 +184,10 @@
   <dialog id="batchDialog" class="modal glass small-modal">
     <form id="batchForm" method="dialog">
       <div class="modal-head"><div><p class="eyebrow">BATCH</p><h2>批量生成备注</h2></div><button class="icon-button" id="batchClose" type="button" aria-label="关闭批量生成">×</button></div>
-      <p class="batch-desc" id="batchDesc">将为 <b>全部书签</b> 用 AI 生成中文备注，<b>可能覆盖已有备注</b>。</p>
+      <p class="batch-desc" id="batchDesc">仅为 <b>没有备注的书签</b> 用 AI 生成中文备注，<b>已有备注不会被覆盖</b>。</p>
       <div class="batch-list">
-        <div>书签总数 <b id="batchTotal">0 个</b></div>
+        <div>待生成 <b id="batchTotal">0 个</b></div>
+        <div>已跳过已有备注 <b id="batchSkipped">0 个</b></div>
         <div>提示 <b>免费额度可能不够一次跑完</b></div>
       </div>
       <p class="batch-progress" id="batchProgress" hidden></p>
@@ -198,6 +199,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=46"></script>
+  <script src="app.js?v=47"></script>
 </body>
 </html>
