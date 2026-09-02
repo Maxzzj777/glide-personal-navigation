@@ -17,7 +17,7 @@ assert.equal(linkCheckState(404), 'broken');
 
 const values = new Map([['admin-session:test', '1'], ['navigation-state', JSON.stringify({ categories: [{ id: 'old', sites: [] }] })]]);
 const backupEnv = { GLIDE_KV: {
-  get: async key => values.get(key) || null,
+  get: async (key, type) => { const value = values.get(key) || null; return type === 'json' && value ? JSON.parse(value) : value; },
   put: async (key, value, options = {}) => { values.set(key, value); values.set(`${key}:meta`, options.metadata); },
   delete: async key => values.delete(key),
   list: async ({ prefix }) => ({ keys: [...values.keys()].filter(key => key.startsWith(prefix) && !key.endsWith(':meta')).sort().map(name => ({ name, metadata: values.get(`${name}:meta`) })) })
@@ -29,3 +29,5 @@ assert.equal((await backups.clone().json()).backups.some(item => item.type === '
 const { id } = (await backups.json()).backups.find(item => item.type === 'change');
 await worker.fetch(new Request('https://worker.test/api/backups/restore', { method: 'POST', headers: { Authorization: 'Bearer test', 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }), backupEnv);
 assert.equal(JSON.parse(values.get('navigation-state')).categories[0].id, 'old');
+const restoredBackups = await worker.fetch(new Request('https://worker.test/api/backups', { headers: { Authorization: 'Bearer test' } }), backupEnv);
+assert.equal((await restoredBackups.json()).lastRestore.type, 'change');

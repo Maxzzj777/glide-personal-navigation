@@ -143,7 +143,7 @@
   <dialog id="backupDialog" class="modal glass small-modal">
     <form method="dialog">
       <div class="modal-head"><div><p class="eyebrow">BACKUP</p><h2>云端备份</h2></div><button class="icon-button" id="backupClose" type="button" aria-label="关闭云端备份">×</button></div>
-      <p class="link-check-summary">保留最近 50 个操作版本，以及最近 30 天每天最后一个版本。恢复前也会自动备份当前内容。</p>
+      <p class="link-check-summary" id="backupSummary">保留最近 50 个操作版本，以及最近 30 天每天最后一个版本。恢复前也会自动备份当前内容。</p>
       <div class="link-check-results" id="backupList"></div>
       <div class="modal-actions"><span></span><button class="ghost" id="backupCancel" type="button">关闭</button></div>
     </form>
@@ -208,6 +208,6 @@
   <script src="reference-data.js?v=7"></script>
   <script src="details-data.js?v=5"></script>
   <script src="sortable.min.js"></script>
-  <script src="app.js?v=52"></script>
+  <script src="app.js?v=53"></script>
 </body>
 </html>

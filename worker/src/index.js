@@ -3,6 +3,7 @@ const BACKUP_PREFIX = 'navigation-backup:';
 const BACKUP_LIMIT = 50;
 const DAILY_BACKUP_PREFIX = 'navigation-daily:';
 const DAILY_BACKUP_LIMIT = 30;
+const LAST_RESTORE_KEY = 'navigation-last-restore';
 const CREDENTIAL_KEY = 'admin-credential';
 const SESSION_PREFIX = 'admin-session:';
 const SESSION_TTL = 60 * 60 * 8;
@@ -73,12 +74,13 @@ export default {
 
       if (url.pathname === '/api/backups' && request.method === 'GET') {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
-        return json({ backups: await listBackups(env) }, 200, cors);
+        const [backups, lastRestore] = await Promise.all([listBackups(env), env.GLIDE_KV.get(LAST_RESTORE_KEY, 'json')]);
+        return json({ backups, lastRestore }, 200, cors);
       }
 
       if (url.pathname === '/api/backups/restore' && request.method === 'POST') {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
-        const { id = '' } = await request.json();
+        const { id = '', createdAt = 0 } = await request.json();
         if (!id.startsWith(BACKUP_PREFIX) && !id.startsWith(DAILY_BACKUP_PREFIX)) return json({ error: '备份不存在' }, 404, cors);
         const value = await env.GLIDE_KV.get(id);
         if (!value) return json({ error: '备份不存在' }, 404, cors);
@@ -86,6 +88,7 @@ export default {
         if (!Array.isArray(state?.categories)) return json({ error: '备份数据无效' }, 400, cors);
         await backupState(env);
         await env.GLIDE_KV.put(DATA_KEY, value);
+        await env.GLIDE_KV.put(LAST_RESTORE_KEY, JSON.stringify({ id, createdAt, type: id.startsWith(DAILY_BACKUP_PREFIX) ? 'daily' : 'change', restoredAt: Date.now() }));
         return json({ state }, 200, cors);
       }
 
