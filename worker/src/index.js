@@ -112,11 +112,18 @@ export default {
         return json(await checkLink(siteUrl), 200, cors);
       }
 
+      if (url.pathname === '/api/site-name' && request.method === 'POST') {
+        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
+        const { url: siteUrl = '' } = await request.json();
+        if (!publicUrl(siteUrl)) return json({ error: '请提供有效的公开网址' }, 400, cors);
+        return json({ name: siteNameFromMeta(await fetchSiteMeta(siteUrl), siteUrl) }, 200, cors);
+      }
+
       if (url.pathname === '/api/remark' && request.method === 'POST') {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
         try {
           const { url: siteUrl = '', name = '' } = await request.json();
-          if (!name || !/^https?:\/\//i.test(siteUrl)) return json({ error: '请提供有效的名称和网址' }, 400, cors);
+          if (!name || !publicUrl(siteUrl)) return json({ error: '请提供有效的名称和网址' }, 400, cors);
           const meta = await fetchSiteMeta(siteUrl);
           let text = '';
           try {
@@ -528,6 +535,10 @@ function privateHost(hostname) {
   return parts.length === 4 && parts.every(Number.isInteger) && (parts[0] === 0 || parts[0] === 10 || parts[0] === 127 || parts[0] === 192 && parts[1] === 168 || parts[0] === 169 && parts[1] === 254 || parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31);
 }
 
+function publicUrl(value) {
+  try { const url = new URL(value); return /^https?:$/.test(url.protocol) && !privateHost(url.hostname); } catch { return false; }
+}
+
 async function authorized(request, env) {
   const header = request.headers.get('Authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
@@ -601,7 +612,7 @@ function timingSafeEqual(a, b) {
 
 // ===== 备注生成（抓取网页标题/描述，无需 AI） =====
 async function fetchSiteMeta(siteUrl) {
-  const info = { title: '', desc: '', status: 0, htmlLen: 0, preview: '' };
+  const info = { title: '', siteName: '', jsonLdName: '', desc: '', status: 0, htmlLen: 0, preview: '' };
   try {
     const resp = await fetch(siteUrl, {
       headers: {
@@ -617,17 +628,29 @@ async function fetchSiteMeta(siteUrl) {
     info.htmlLen = html.length;
     info.preview = html.slice(0, 150).replace(/\s+/g, ' ');
     const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    const ogTitle = (html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
-      || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["']/i);
-    const desc = (descMatch || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    const ogDesc = (html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i) || ['', ''])[1].replace(/\s+/g, ' ').trim();
-    info.title = decodeHtmlEntities(ogTitle || title).slice(0, 120);
-    info.desc = decodeHtmlEntities(ogDesc || desc).slice(0, 200);
+    const meta = (key) => { for (const tag of html.match(/<meta\b[^>]*>/gi) || []) { const attr = (name) => (tag.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, 'i')) || ['', ''])[1]; if ((attr('property') || attr('name')).toLowerCase() === key) return attr('content').trim(); } return ''; };
+    info.siteName = decodeHtmlEntities(meta('og:site_name')).slice(0, 120);
+    info.title = decodeHtmlEntities(meta('og:title') || title).slice(0, 120);
+    info.desc = decodeHtmlEntities(meta('og:description') || meta('description')).slice(0, 200);
+    info.jsonLdName = jsonLdName(html).slice(0, 120);
   } catch (e) {
     info.preview = 'fetch error: ' + (e?.message || e);
   }
   return info;
+}
+
+function jsonLdName(html) {
+  for (const body of html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || []) {
+    try { const data = JSON.parse((body.match(/>([\s\S]*)<\/script>/i) || ['', ''])[1]); const walk = value => { if (!value || typeof value !== 'object') return ''; if (['website', 'organization'].includes(String(value['@type'] || '').toLowerCase()) && typeof value.name === 'string') return value.name; for (const child of Object.values(value)) { const name = walk(child); if (name) return name; } return ''; }; const name = walk(data); if (name) return String(name); } catch {}
+  }
+  return '';
+}
+
+export function siteNameFromMeta(meta, siteUrl) {
+  const clean = value => String(value || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  const name = clean(meta?.siteName) || clean(meta?.title) || clean(meta?.jsonLdName);
+  if (name) return name;
+  try { return new URL(siteUrl).hostname.replace(/^www\./, '').split('.')[0].replace(/[-_]+/g, ' '); } catch { return ''; }
 }
 
 function decodeHtmlEntities(s) {

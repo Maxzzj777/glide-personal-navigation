@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('./index.js', import.meta.url), 'utf8');
-const { default: worker, linkCheckState } = await import(`data:text/javascript,${encodeURIComponent(source)}`);
+const { default: worker, linkCheckState, siteNameFromMeta } = await import(`data:text/javascript,${encodeURIComponent(source)}`);
 const env = { GLIDE_KV: { get: async key => key === 'admin-session:test' ? '1' : null } };
 
 for (const url of ['http://127.0.0.1/', 'http://[::1]/', 'http://192.168.1.1/']) {
@@ -14,6 +14,9 @@ assert.equal(linkCheckState(200), 'accessible');
 assert.equal(linkCheckState(403), 'restricted');
 assert.equal(linkCheckState(429), 'temporary');
 assert.equal(linkCheckState(404), 'broken');
+assert.equal(siteNameFromMeta({ siteName: '分享名', title: '标题', jsonLdName: '结构化名称' }, 'https://example.com'), '分享名');
+assert.equal(siteNameFromMeta({ title: '标题', jsonLdName: '结构化名称' }, 'https://example.com'), '标题');
+assert.equal(siteNameFromMeta({}, 'https://my-site.example.com'), 'my site');
 
 const values = new Map([['admin-session:test', '1'], ['navigation-state', JSON.stringify({ categories: [{ id: 'old', sites: [] }] })]]);
 const backupEnv = { GLIDE_KV: {
