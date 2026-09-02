@@ -4,6 +4,9 @@
   "main": "src/index.js",
   "compatibility_date": "2026-08-27",
   "workers_dev": true,
+  "triggers": {
+    "crons": ["55 15 * * *"]
+  },
   "routes": [
     {
       "pattern": "shuqian.kdns.fr/api/*",

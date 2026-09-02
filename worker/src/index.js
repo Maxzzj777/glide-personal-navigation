@@ -1,4 +1,8 @@
 const DATA_KEY = 'navigation-state';
+const BACKUP_PREFIX = 'navigation-backup:';
+const BACKUP_LIMIT = 50;
+const DAILY_BACKUP_PREFIX = 'navigation-daily:';
+const DAILY_BACKUP_LIMIT = 30;
 const CREDENTIAL_KEY = 'admin-credential';
 const SESSION_PREFIX = 'admin-session:';
 const SESSION_TTL = 60 * 60 * 8;
@@ -62,8 +66,27 @@ export default {
         if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
         const state = await request.json();
         if (!Array.isArray(state?.categories)) return json({ error: '数据格式错误' }, 400, cors);
+        await backupState(env);
         await env.GLIDE_KV.put(DATA_KEY, JSON.stringify(state));
         return json({ ok: true }, 200, cors);
+      }
+
+      if (url.pathname === '/api/backups' && request.method === 'GET') {
+        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
+        return json({ backups: await listBackups(env) }, 200, cors);
+      }
+
+      if (url.pathname === '/api/backups/restore' && request.method === 'POST') {
+        if (!(await authorized(request, env))) return json({ error: '登录已失效' }, 401, cors);
+        const { id = '' } = await request.json();
+        if (!id.startsWith(BACKUP_PREFIX) && !id.startsWith(DAILY_BACKUP_PREFIX)) return json({ error: '备份不存在' }, 404, cors);
+        const value = await env.GLIDE_KV.get(id);
+        if (!value) return json({ error: '备份不存在' }, 404, cors);
+        const state = JSON.parse(value);
+        if (!Array.isArray(state?.categories)) return json({ error: '备份数据无效' }, 400, cors);
+        await backupState(env);
+        await env.GLIDE_KV.put(DATA_KEY, value);
+        return json({ state }, 200, cors);
       }
 
       if (url.pathname === '/api/password' && request.method === 'PUT') {
@@ -128,6 +151,15 @@ export default {
       console.error('Worker request failed', error);
       return json({ error: '服务器处理失败' }, 500, cors);
     }
+  },
+  async scheduled(controller, env) {
+    const current = await env.GLIDE_KV.get(DATA_KEY);
+    if (!current) return;
+    const date = new Date(controller.scheduledTime + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    await env.GLIDE_KV.put(`${DAILY_BACKUP_PREFIX}${date}`, current, { metadata: { createdAt: controller.scheduledTime, daily: true } });
+    const { keys } = await env.GLIDE_KV.list({ prefix: DAILY_BACKUP_PREFIX, limit: 1000 });
+    keys.sort((a, b) => a.name.localeCompare(b.name));
+    await Promise.all(keys.slice(0, Math.max(0, keys.length - DAILY_BACKUP_LIMIT)).map(({ name }) => env.GLIDE_KV.delete(name)));
   }
 };
 
@@ -497,6 +529,24 @@ async function authorized(request, env) {
   const header = request.headers.get('Authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
   return !!token && (await env.GLIDE_KV.get(SESSION_PREFIX + token)) === '1';
+}
+
+async function backupState(env) {
+  const current = await env.GLIDE_KV.get(DATA_KEY);
+  if (!current) return;
+  const key = `${BACKUP_PREFIX}${Date.now().toString(36)}-${randomToken(4)}`;
+  await env.GLIDE_KV.put(key, current, { metadata: { createdAt: Date.now() } });
+  const { keys } = await env.GLIDE_KV.list({ prefix: BACKUP_PREFIX, limit: 1000 });
+  keys.sort((a, b) => a.name.localeCompare(b.name));
+  await Promise.all(keys.slice(0, Math.max(0, keys.length - BACKUP_LIMIT)).map(({ name }) => env.GLIDE_KV.delete(name)));
+}
+
+async function listBackups(env) {
+  const [backups, daily] = await Promise.all([env.GLIDE_KV.list({ prefix: BACKUP_PREFIX, limit: 1000 }), env.GLIDE_KV.list({ prefix: DAILY_BACKUP_PREFIX, limit: 1000 })]);
+  return [
+    ...backups.keys.sort((a, b) => b.name.localeCompare(a.name)).slice(0, BACKUP_LIMIT).map(({ name, metadata }) => ({ id: name, createdAt: metadata?.createdAt || 0, type: 'change' })),
+    ...daily.keys.sort((a, b) => b.name.localeCompare(a.name)).slice(0, DAILY_BACKUP_LIMIT).map(({ name, metadata }) => ({ id: name, createdAt: metadata?.createdAt || 0, type: 'daily' }))
+  ].sort((a, b) => b.createdAt - a.createdAt);
 }
 
 async function verifyPassword(env, password) {
