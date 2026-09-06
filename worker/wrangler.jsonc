@@ -9,8 +9,8 @@
   },
   "routes": [
     {
-      "pattern": "shuqian.kdns.fr/api/*",
-      "zone_name": "shuqian.kdns.fr"
+      "pattern": "glide777.kdns.fr/api/*",
+      "zone_name": "glide777.kdns.fr"
     }
   ],
   "kv_namespaces": [

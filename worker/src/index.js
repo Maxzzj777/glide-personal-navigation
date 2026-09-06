@@ -16,7 +16,7 @@ const LOGIN_LOCK_STEPS = [
 ];
 function humanizeLock(sec) { return sec < 60 ? `${sec} 秒` : `${Math.round(sec / 60)} 分钟`; }
 const ALLOWED_ORIGINS = new Set([
-  'https://shuqian.kdns.fr',
+  'https://glide777.kdns.fr',
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
@@ -492,7 +492,7 @@ function scoreIcon(c) {
 }
 
 function corsHeaders(origin) {
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://shuqian.kdns.fr';
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://glide777.kdns.fr';
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',

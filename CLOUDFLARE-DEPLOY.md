@@ -29,7 +29,7 @@ Fork 后按下面步骤操作。每个 Fork 使用自己的 GitHub Pages、Cloud
 
 方式 A 还要在 Cloudflare DNS 中给子域名创建指向 `你的用户名.github.io` 的 CNAME 记录，并开启橙色云朵代理。
 
-> 不要保留原仓库的 `shuqian.kdns.fr`。它属于原作者，其他用户无法绑定或控制。
+> 不要保留原仓库的 `glide777.kdns.fr`。它属于原作者，其他用户无法绑定或控制。
 
 ## 2. 创建自己的 KV
 
@@ -69,7 +69,7 @@ KV 是书签、背景、AI 配置和管理员密码的云端存储。Namespace I
 
 ### 3.2 替换允许访问的网页地址
 
-编辑 `worker/src/index.js`，搜索 `https://shuqian.kdns.fr`，把找到的两处都替换成自己网站的来源：
+编辑 `worker/src/index.js`，搜索 `https://glide777.kdns.fr`，把找到的两处都替换成自己网站的来源：
 
 - 方式 A：`https://nav.example.com`
 - 方式 B：`https://你的用户名.github.io`

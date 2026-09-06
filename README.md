@@ -91,7 +91,7 @@
 - 使用上面的 `github.io` 地址：**删除 `CNAME` 文件**
 - 使用自己的域名：把 `CNAME` 内容改成自己的完整域名，例如 `nav.example.com`
 
-> 不要保留原仓库的 `shuqian.kdns.fr`，否则 GitHub Pages 会尝试使用原作者的域名。
+> 不要保留原仓库的 `glide777.kdns.fr`，否则 GitHub Pages 会尝试使用原作者的域名。
 
 ### 3. 创建 Cloudflare KV
 
@@ -114,12 +114,12 @@
 - 如果你用自己的域名：保留 `routes`，把 `pattern` 改成 `你的完整域名/api/*`，把 `zone_name` 改成 Cloudflare 中的根域名。例如网站是 `nav.example.com`，则 `zone_name` 是 `example.com`
 - 如果你使用 Cloudflare 提供的免费 `*.workers.dev` 域名：**删掉整个 `routes` 数组**
 
-然后编辑 `worker/src/index.js`，搜索 `https://shuqian.kdns.fr`，把找到的两处都改成你网站的来源：
+然后编辑 `worker/src/index.js`，搜索 `https://glide777.kdns.fr`，把找到的两处都改成你网站的来源：
 
 - 自定义域名示例：`https://nav.example.com`
 - GitHub Pages 示例：`https://你的用户名.github.io`（不要带 `/glide-personal-navigation/` 路径）
 
-> 原仓库里的 KV ID、`shuqian.kdns.fr` 和路由都不能原样保留。即使忘记修改，别人的 Cloudflare 账号也无权部署到原作者的 KV 或域名，通常只会导致自己的部署失败，不会影响原站。
+> 原仓库里的 KV ID、`glide777.kdns.fr` 和路由都不能原样保留。即使忘记修改，别人的 Cloudflare 账号也无权部署到原作者的 KV 或域名，通常只会导致自己的部署失败，不会影响原站。
 
 ### 5. 部署 Worker（推荐用 Cloudflare Git 集成，零本地）
 
